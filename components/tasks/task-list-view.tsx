@@ -18,9 +18,10 @@ interface TaskListViewProps {
   lists: List[];
   labels: Label[];
   initialTasks: Task[];
+  currentList?: List;
 }
 
-export function TaskListView({ view, lists, labels, initialTasks }: TaskListViewProps) {
+export function TaskListView({ view, lists, labels, initialTasks, currentList }: TaskListViewProps) {
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [showCompleted, setShowCompleted] = useState(false);
@@ -82,7 +83,14 @@ export function TaskListView({ view, lists, labels, initialTasks }: TaskListView
       <div className="border-b p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-semibold capitalize">
-            {view.replace('_', ' ')}
+            {currentList ? (
+              <span className="flex items-center gap-2">
+                <span className="text-2xl">{currentList.emoji}</span>
+                {currentList.name}
+              </span>
+            ) : (
+              view.replace('_', ' ')
+            )}
           </h2>
           <Button onClick={handleNewTask}>
             <Plus className="mr-2 h-4 w-4" />

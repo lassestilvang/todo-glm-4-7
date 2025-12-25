@@ -13,7 +13,9 @@ interface ListPageProps {
 
 export default async function ListPage({ params }: ListPageProps) {
   const listId = parseInt(params.id);
+  console.log('ListPage: listId =', listId, 'typeof listId =', typeof listId);
   const list = await listRepository.findById(listId);
+  console.log('ListPage: list =', list);
 
   if (!list) {
     return (
