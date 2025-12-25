@@ -61,18 +61,48 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, labels }: TaskF
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
-      name: task?.name || '',
-      description: task?.description || '',
-      list_id: task?.list_id || lists[0]?.id || 0,
-      deadline: task?.deadline ? task.deadline.slice(0, 16) : '',
-      reminder_time: task?.reminder_time ? task.reminder_time.slice(0, 16) : '',
-      estimated_time: task?.estimated_time ? String(Math.floor(task.estimated_time / 60)).padStart(2, '0') + ':' + String(task.estimated_time % 60).padStart(2, '0') : '',
-      actual_time: task?.actual_time ? String(Math.floor(task.actual_time / 60)).padStart(2, '0') + ':' + String(task.actual_time % 60).padStart(2, '0') : '',
-      priority: task?.priority || 'none',
-      recurring_pattern: task?.recurring_pattern || 'none',
-      recurring_end_date: task?.recurring_end_date ? task.recurring_end_date.slice(0, 16) : '',
+      name: '',
+      description: '',
+      list_id: lists[0]?.id || 0,
+      deadline: '',
+      reminder_time: '',
+      estimated_time: '',
+      actual_time: '',
+      priority: 'none',
+      recurring_pattern: 'none',
+      recurring_end_date: '',
     },
   });
+
+  useEffect(() => {
+    if (task) {
+      form.reset({
+        name: task.name || '',
+        description: task.description || '',
+        list_id: task.list_id || lists[0]?.id || 0,
+        deadline: task.deadline ? task.deadline.slice(0, 16) : '',
+        reminder_time: task.reminder_time ? task.reminder_time.slice(0, 16) : '',
+        estimated_time: task.estimated_time ? String(Math.floor(task.estimated_time / 60)).padStart(2, '0') + ':' + String(task.estimated_time % 60).padStart(2, '0') : '',
+        actual_time: task.actual_time ? String(Math.floor(task.actual_time / 60)).padStart(2, '0') + ':' + String(task.actual_time % 60).padStart(2, '0') : '',
+        priority: task.priority || 'none',
+        recurring_pattern: task.recurring_pattern || 'none',
+        recurring_end_date: task.recurring_end_date ? task.recurring_end_date.slice(0, 16) : '',
+      });
+    } else {
+      form.reset({
+        name: '',
+        description: '',
+        list_id: lists[0]?.id || 0,
+        deadline: '',
+        reminder_time: '',
+        estimated_time: '',
+        actual_time: '',
+        priority: 'none',
+        recurring_pattern: 'none',
+        recurring_end_date: '',
+      });
+    }
+  }, [task, lists, form]);
 
   const handleSubmit = (data: TaskFormValues) => {
     onSubmit(data);
