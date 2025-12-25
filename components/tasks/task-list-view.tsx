@@ -10,6 +10,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskItem } from './task-item';
 import { TaskForm } from './task-form';
 import type { Task, TaskStatus, List, Label } from '@/features/tasks/types';
+import { createTask, updateTask } from '@/app/actions';
+import { useRouter } from 'next/navigation';
 
 interface TaskListViewProps {
   view: string;
@@ -19,6 +21,7 @@ interface TaskListViewProps {
 }
 
 export function TaskListView({ view, lists, labels, initialTasks }: TaskListViewProps) {
+  const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [showCompleted, setShowCompleted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,9 +62,14 @@ export function TaskListView({ view, lists, labels, initialTasks }: TaskListView
   };
 
   const handleSubmit = async (data: any) => {
-    console.log('Task submitted:', data);
+    if (selectedTask) {
+      await updateTask(selectedTask.id, data);
+    } else {
+      await createTask(data);
+    }
     setShowTaskForm(false);
     setSelectedTask(undefined);
+    router.refresh();
   };
 
   const handleNewTask = () => {
