@@ -13,7 +13,7 @@ db.serialize(() => {
   db.run('PRAGMA journal_mode = WAL');
 });
 
-function runAsync(sql: string, params: any[] = []): Promise<any> {
+function runAsync(sql: string, params: any[] = []): Promise<{ lastID: number; changes: number }> {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function(err) {
       if (err) reject(err);
@@ -40,4 +40,4 @@ function allAsync<T>(sql: string, params: any[] = []): Promise<T[]> {
   });
 }
 
-export { db, dbPath, runAsync, getAsync, allAsync, type RunResult };
+export { db, dbPath, runAsync, getAsync, allAsync };

@@ -7,9 +7,7 @@ export const listRepository = {
   },
 
   findById: async (id: number): Promise<List | null> => {
-    console.log('findById: id =', id, 'typeof id =', typeof id);
     const result = await getAsync<any>('SELECT * FROM lists WHERE id = ?', [id]);
-    console.log('findById: result =', result);
     return result || null;
   },
 
