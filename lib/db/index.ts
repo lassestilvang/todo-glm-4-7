@@ -1,9 +1,9 @@
-import Database from 'sqlite3';
+import * as sqlite3 from 'sqlite3';
 import path from 'path';
 
 const dbPath = path.join(process.cwd(), 'planner.db');
 
-const db = new Database(dbPath, (err) => {
+const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Error opening database:', err);
   }
