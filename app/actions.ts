@@ -1,15 +1,34 @@
 'use server';
 
 import { taskRepository } from '@/features/tasks/actions';
-import type { TaskFormData, TaskStatus } from '@/features/tasks/types';
+import type { TaskFormData, TaskStatus, CreateTaskInput } from '@/features/tasks/types';
 import { timeToMinutes } from '@/lib/validators/schema';
 
 export async function createTask(data: TaskFormData) {
-  return await taskRepository.create({
-    ...data,
+  const taskInput: CreateTaskInput = {
+    name: data.name,
+    description: data.description,
+    list_id: data.list_id,
+    priority: data.priority,
+    labels: data.labels,
+    recurring_pattern: data.recurring_pattern,
     estimated_time: data.estimated_time ? timeToMinutes(data.estimated_time) : undefined,
     actual_time: data.actual_time ? timeToMinutes(data.actual_time) : undefined,
-  });
+  };
+  
+  if (data.deadline) {
+    taskInput.deadline = new Date(data.deadline);
+  }
+  
+  if (data.reminder_time) {
+    taskInput.reminder_time = new Date(data.reminder_time);
+  }
+  
+  if (data.recurring_end_date) {
+    taskInput.recurring_end_date = new Date(data.recurring_end_date);
+  }
+  
+  return await taskRepository.create(taskInput);
 }
 
 export async function updateTask(id: number, data: Partial<TaskFormData>) {

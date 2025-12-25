@@ -4,12 +4,10 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Calendar, Clock, Tag, Plus, X, Paperclip } from 'lucide-react';
+import { Calendar, Clock, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -33,24 +31,35 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { taskSchema, type TaskFormData } from '@/lib/validators/schema';
-import type { Task, List, Label, Priority, RecurringPattern } from '@/features/tasks/types';
+import { type Task, List, Label } from '@/features/tasks/types';
+
+const taskFormSchema = z.object({
+  name: z.string().min(1, 'Task name is required'),
+  description: z.string().optional(),
+  list_id: z.number().int().positive('List ID is required'),
+  deadline: z.string().optional(),
+  reminder_time: z.string().optional(),
+  estimated_time: z.string().optional(),
+  actual_time: z.string().optional(),
+  priority: z.enum(['high', 'medium', 'low', 'none'] as const),
+  recurring_pattern: z.enum(['none', 'daily', 'weekly', 'weekdays', 'monthly', 'yearly', 'custom'] as const),
+  recurring_end_date: z.string().optional(),
+});
+
+type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 interface TaskFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: TaskFormData) => void;
+  onSubmit: (data: TaskFormValues) => void;
   task?: Task;
   lists: List[];
   labels: Label[];
 }
 
 export function TaskForm({ open, onClose, onSubmit, task, lists, labels }: TaskFormProps) {
-  const [selectedLabels, setSelectedLabels] = useState<number[]>([]);
-  const [subtasks, setSubtasks] = useState<Array<{ id: string; name: string }>>([]);
-
-  const form = useForm<TaskFormData>({
-    resolver: zodResolver(taskSchema),
+  const form = useForm<TaskFormValues>({
+    resolver: zodResolver(taskFormSchema),
     defaultValues: {
       name: task?.name || '',
       description: task?.description || '',
@@ -60,54 +69,18 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, labels }: TaskF
       estimated_time: task?.estimated_time ? String(Math.floor(task.estimated_time / 60)).padStart(2, '0') + ':' + String(task.estimated_time % 60).padStart(2, '0') : '',
       actual_time: task?.actual_time ? String(Math.floor(task.actual_time / 60)).padStart(2, '0') + ':' + String(task.actual_time % 60).padStart(2, '0') : '',
       priority: task?.priority || 'none',
-      labels: [],
       recurring_pattern: task?.recurring_pattern || 'none',
       recurring_end_date: task?.recurring_end_date ? task.recurring_end_date.slice(0, 16) : '',
-      subtasks: [],
     },
   });
 
-  useEffect(() => {
-    if (task?.labels) {
-      setSelectedLabels(task.labels.map(l => l.id));
-    }
-  }, [task]);
-
-  const handleSubmit = (data: TaskFormData) => {
-    onSubmit({
-      ...data,
-      labels: selectedLabels,
-      subtasks: subtasks.map(st => ({
-        name: st.name,
-        priority: 'none' as Priority,
-      })),
-    });
-    handleClose();
+  const handleSubmit = (data: TaskFormValues) => {
+    onSubmit(data);
   };
 
   const handleClose = () => {
     form.reset();
-    setSelectedLabels([]);
-    setSubtasks([]);
     onClose();
-  };
-
-  const toggleLabel = (labelId: number) => {
-    setSelectedLabels(prev =>
-      prev.includes(labelId) ? prev.filter(id => id !== labelId) : [...prev, labelId]
-    );
-  };
-
-  const addSubtask = () => {
-    setSubtasks(prev => [...prev, { id: Date.now().toString(), name: '' }]);
-  };
-
-  const updateSubtask = (id: string, name: string) => {
-    setSubtasks(prev => prev.map(st => st.id === id ? { ...st, name } : st));
-  };
-
-  const removeSubtask = (id: string) => {
-    setSubtasks(prev => prev.filter(st => st.id !== id));
   };
 
   return (
@@ -308,57 +281,6 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, labels }: TaskF
                 )}
               />
             )}
-
-            <div>
-              <FormLabel>Labels</FormLabel>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {labels.map((label) => (
-                  <Badge
-                    key={label.id}
-                    variant={selectedLabels.includes(label.id) ? 'default' : 'outline'}
-                    className="cursor-pointer transition-colors"
-                    style={
-                      selectedLabels.includes(label.id)
-                        ? { backgroundColor: label.color, color: '#fff' }
-                        : { borderColor: label.color, color: label.color }
-                    }
-                    onClick={() => toggleLabel(label.id)}
-                  >
-                    {label.emoji} {label.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between">
-                <FormLabel>Subtasks</FormLabel>
-                <Button type="button" variant="outline" size="sm" onClick={addSubtask}>
-                  <Plus className="mr-1 h-3 w-3" />
-                  Add Subtask
-                </Button>
-              </div>
-              <div className="mt-2 space-y-2">
-                {subtasks.map((subtask) => (
-                  <div key={subtask.id} className="flex items-center gap-2">
-                    <Input
-                      value={subtask.name}
-                      onChange={(e) => updateSubtask(subtask.id, e.target.value)}
-                      placeholder="Subtask name"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 text-destructive"
-                      onClick={() => removeSubtask(subtask.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleClose}>

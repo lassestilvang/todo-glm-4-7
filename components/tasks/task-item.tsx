@@ -36,7 +36,9 @@ export function TaskItem({
   onToggleExpand 
 }: TaskItemProps) {
   const [showSubtasks, setShowSubtasks] = useState(isExpanded);
-  const hasSubtasks = task.subtasks && task.subtasks.length > 0;
+  const taskSubtasks = 'subtasks' in task ? (task as any).subtasks : [];
+  const taskLabels = 'labels' in task ? (task as any).labels : [];
+  const hasSubtasks = taskSubtasks && taskSubtasks.length > 0;
   const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== 'done';
 
   const handleComplete = (checked: boolean) => {
@@ -128,16 +130,16 @@ export function TaskItem({
               </Badge>
             )}
 
-            {task.labels && task.labels.length > 0 && task.labels.map((label) => (
-              <Badge
-                key={label.id}
-                variant="outline"
-                className="text-xs"
-                style={{ borderColor: label.color, color: label.color }}
-              >
-                {label.emoji} {label.name}
-              </Badge>
-            ))}
+             {taskLabels && taskLabels.length > 0 && taskLabels.map((label: any) => (
+               <Badge
+                 key={label.id}
+                 variant="outline"
+                 className="text-xs"
+                 style={{ borderColor: label.color, color: label.color }}
+               >
+                 {label.emoji} {label.name}
+               </Badge>
+             ))}
           </div>
         </div>
 
@@ -171,7 +173,7 @@ export function TaskItem({
             exit={{ opacity: 0, height: 0 }}
             className="mt-3 ml-6 space-y-2 border-l-2 pl-4"
           >
-            {task.subtasks.map((subtask) => (
+            {taskSubtasks.map((subtask) => (
               <SubtaskItem
                 key={subtask.id}
                 task={subtask}
