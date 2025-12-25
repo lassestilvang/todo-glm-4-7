@@ -1,0 +1,41 @@
+'use server';
+
+import { taskRepository } from '@/features/tasks/actions';
+import type { TaskFormData, TaskStatus } from '@/features/tasks/types';
+import { timeToMinutes } from '@/lib/validators/schema';
+
+export async function createTask(data: TaskFormData) {
+  return await taskRepository.create({
+    ...data,
+    estimated_time: data.estimated_time ? timeToMinutes(data.estimated_time) : undefined,
+    actual_time: data.actual_time ? timeToMinutes(data.actual_time) : undefined,
+  });
+}
+
+export async function updateTask(id: number, data: Partial<TaskFormData>) {
+  const update: any = { id, ...data };
+  if (data.estimated_time) {
+    update.estimated_time = timeToMinutes(data.estimated_time);
+  }
+  if (data.actual_time) {
+    update.actual_time = timeToMinutes(data.actual_time);
+  }
+  if (data.deadline) {
+    update.deadline = new Date(data.deadline);
+  }
+  if (data.reminder_time) {
+    update.reminder_time = new Date(data.reminder_time);
+  }
+  if (data.recurring_end_date) {
+    update.recurring_end_date = new Date(data.recurring_end_date);
+  }
+  return await taskRepository.update(update);
+}
+
+export async function completeTask(taskId: number, status: TaskStatus) {
+  return await taskRepository.update({ id: taskId, status });
+}
+
+export async function deleteTask(taskId: number) {
+  return await taskRepository.delete(taskId);
+}
