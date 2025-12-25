@@ -91,16 +91,16 @@ export interface CreateTaskInput {
   name: string;
   description?: string;
   list_id: number;
-  deadline?: Date;
-  reminder_time?: Date;
-  estimated_time?: number;
-  actual_time?: number;
+  deadline?: Date | null;
+  reminder_time?: Date | null;
+  estimated_time?: number | null;
+  actual_time?: number | null;
   priority?: Priority;
   labels?: number[];
   recurring_pattern?: RecurringPattern;
-  recurring_end_date?: Date;
-  recurrence_count?: number;
-  parent_task_id?: number;
+  recurring_end_date?: Date | null;
+  recurrence_count?: number | null;
+  parent_task_id?: number | null;
   position?: number;
 }
 

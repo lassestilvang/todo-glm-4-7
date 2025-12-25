@@ -1,6 +1,6 @@
 import { startOfDay, endOfDay, addDays } from 'date-fns';
 import { taskRepository } from './actions';
-import type { Task, ViewType } from './types';
+import type { Task, ViewType, CreateTaskInput } from './types';
 
 export const viewUtils = {
   getTodayTasks: async (showCompleted: boolean = false): Promise<Task[]> => {
@@ -137,16 +137,21 @@ export const recurringTaskUtils = {
       return null;
     }
 
-    return taskRepository.create({
+    const createInput: CreateTaskInput = {
       name: task.name,
       description: task.description,
       list_id: task.list_id,
-      deadline: nextDeadline,
+      deadline: (nextDeadline as Date | undefined),
       estimated_time: task.estimated_time,
       priority: task.priority,
       recurring_pattern: task.recurring_pattern,
-      recurring_end_date: task.recurring_end_date ? new Date(task.recurring_end_date) : undefined,
       recurrence_count: task.recurrence_count
-    });
+    };
+
+    if (task.recurring_end_date) {
+      createInput.recurring_end_date = new Date(task.recurring_end_date);
+    }
+
+    return taskRepository.create(createInput);
   }
 };
