@@ -173,7 +173,7 @@ export function TaskItem({
             exit={{ opacity: 0, height: 0 }}
             className="mt-3 ml-6 space-y-2 border-l-2 pl-4"
           >
-            {taskSubtasks.map((subtask) => (
+            {taskSubtasks.map((subtask: any) => (
               <SubtaskItem
                 key={subtask.id}
                 task={subtask}

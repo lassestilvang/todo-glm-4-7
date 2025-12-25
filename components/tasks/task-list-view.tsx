@@ -37,10 +37,11 @@ export function TaskListView({ view, lists, labels, initialTasks }: TaskListView
   const filteredTasks = tasks.filter(task => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
+    const taskLabels = 'labels' in task ? (task as any).labels : [];
     return (
       task.name.toLowerCase().includes(query) ||
       task.description?.toLowerCase().includes(query) ||
-      task.labels.some(l => l.name.toLowerCase().includes(query))
+      taskLabels.some((l: any) => l.name.toLowerCase().includes(query))
     );
   });
 

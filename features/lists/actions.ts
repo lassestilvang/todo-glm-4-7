@@ -7,11 +7,13 @@ export const listRepository = {
   },
 
   findById: async (id: number): Promise<List | null> => {
-    return getAsync<List>('SELECT * FROM lists WHERE id = ?', [id]);
+    const result = await getAsync<any>('SELECT * FROM lists WHERE id = ?', [id]);
+    return result || null;
   },
 
   findInbox: async (): Promise<List | null> => {
-    return getAsync<List>('SELECT * FROM lists WHERE is_inbox = 1');
+    const result = await getAsync<any>('SELECT * FROM lists WHERE is_inbox = 1');
+    return result || null;
   },
 
   create: async (name: string, emoji: string, color: string): Promise<List> => {

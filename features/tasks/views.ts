@@ -145,7 +145,7 @@ export const recurringTaskUtils = {
       estimated_time: task.estimated_time,
       priority: task.priority,
       recurring_pattern: task.recurring_pattern,
-      recurring_end_date: task.recurring_end_date,
+      recurring_end_date: task.recurring_end_date ? new Date(task.recurring_end_date) : undefined,
       recurrence_count: task.recurrence_count
     });
   }

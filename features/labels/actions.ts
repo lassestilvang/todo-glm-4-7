@@ -7,7 +7,8 @@ export const labelRepository = {
   },
 
   findById: async (id: number): Promise<Label | null> => {
-    return getAsync<Label>('SELECT * FROM labels WHERE id = ?', [id]);
+    const result = await getAsync<any>('SELECT * FROM labels WHERE id = ?', [id]);
+    return result || null;
   },
 
   create: async (name: string, emoji: string, color: string): Promise<Label> => {

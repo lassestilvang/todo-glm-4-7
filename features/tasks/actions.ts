@@ -24,14 +24,15 @@ export const taskRepository = {
   },
 
   findById: async (id: number): Promise<Task | null> => {
-    return getAsync<Task>(`SELECT ${taskColumns} FROM tasks WHERE id = ?`, [id]);
+    const result = await getAsync<Task>(`SELECT ${taskColumns} FROM tasks WHERE id = ?`, [id]);
+    return result || null;
   },
 
   findWithDetails: async (id: number): Promise<TaskWithDetails | null> => {
     const task = await taskRepository.findById(id);
     if (!task) return null;
 
-    const list = await getAsync<List>('SELECT * FROM lists WHERE id = ?', [task.list_id]);
+    const list = await getAsync<any>('SELECT * FROM lists WHERE id = ?', [task.list_id]);
     if (!list) return null;
     
     const labels = await allAsync<Label>(`
