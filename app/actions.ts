@@ -18,14 +18,20 @@ export async function createTask(data: TaskFormData) {
   
   if (data.deadline) {
     taskInput.deadline = new Date(data.deadline);
+  } else if (data.deadline === '') {
+    taskInput.deadline = null;
   }
   
   if (data.reminder_time) {
     taskInput.reminder_time = new Date(data.reminder_time);
+  } else if (data.reminder_time === '') {
+    taskInput.reminder_time = null;
   }
   
   if (data.recurring_end_date) {
     taskInput.recurring_end_date = new Date(data.recurring_end_date);
+  } else if (data.recurring_end_date === '') {
+    taskInput.recurring_end_date = null;
   }
   
   return await taskRepository.create(taskInput);
@@ -41,12 +47,18 @@ export async function updateTask(id: number, data: Partial<TaskFormData>) {
   }
   if (data.deadline) {
     update.deadline = new Date(data.deadline);
+  } else if (data.deadline === '') {
+    update.deadline = null;
   }
   if (data.reminder_time) {
     update.reminder_time = new Date(data.reminder_time);
+  } else if (data.reminder_time === '') {
+    update.reminder_time = null;
   }
   if (data.recurring_end_date) {
     update.recurring_end_date = new Date(data.recurring_end_date);
+  } else if (data.recurring_end_date === '') {
+    update.recurring_end_date = null;
   }
   return await taskRepository.update(update);
 }
