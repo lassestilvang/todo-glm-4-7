@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import type { List, Label } from '@/features/tasks/types';
+import { ListForm } from './list-form';
 
 interface SidebarProps {
   lists?: List[];
@@ -72,9 +73,11 @@ export function Sidebar({ lists = [], labels = [], overdueCount = 0 }: SidebarPr
               <h2 className="text-xs font-semibold text-muted-foreground">
                 Lists
               </h2>
-              <Button variant="ghost" size="icon" className="h-5 w-5">
-                <Plus className="h-3 w-3" />
-              </Button>
+              <ListForm>
+                <Button variant="ghost" size="icon" className="h-5 w-5">
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </ListForm>
             </div>
             <div className="space-y-1">
               {lists.map((list) => {

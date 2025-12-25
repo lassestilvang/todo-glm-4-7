@@ -1,6 +1,7 @@
 'use server';
 
 import { taskRepository } from '@/features/tasks/actions';
+import { listRepository } from '@/features/lists/actions';
 import type { TaskFormData, TaskStatus, CreateTaskInput } from '@/features/tasks/types';
 import { timeToMinutes } from '@/lib/validators/schema';
 
@@ -69,4 +70,8 @@ export async function completeTask(taskId: number, status: TaskStatus) {
 
 export async function deleteTask(taskId: number) {
   return await taskRepository.delete(taskId);
+}
+
+export async function createList(name: string, emoji: string, color: string) {
+  return await listRepository.create(name, emoji, color);
 }
