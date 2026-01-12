@@ -118,7 +118,7 @@ describe('Task Repository', () => {
       const changeLogs = await db.all('SELECT * FROM change_logs WHERE task_id = ?', [task.id]);
       expect(changeLogs.length).toBeGreaterThan(0);
       
-      const nameChange = changeLogs.find((cl: any) => cl.field_name === 'name');
+      const nameChange = changeLogs.find((cl: { field_name: string }) => cl.field_name === 'name');
       expect(nameChange).toBeDefined();
       expect(nameChange.old_value).toBe('Test Task');
       expect(nameChange.new_value).toBe('Updated Task');

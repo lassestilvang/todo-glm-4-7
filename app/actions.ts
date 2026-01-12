@@ -2,7 +2,7 @@
 
 import { taskRepository } from '@/features/tasks/actions';
 import { listRepository } from '@/features/lists/actions';
-import type { TaskFormData, TaskStatus, CreateTaskInput } from '@/features/tasks/types';
+import type { TaskFormData, TaskStatus, CreateTaskInput, UpdateTaskInput } from '@/features/tasks/types';
 import { timeToMinutes } from '@/lib/validators/schema';
 
 export async function createTask(data: TaskFormData) {
@@ -39,7 +39,10 @@ export async function createTask(data: TaskFormData) {
 }
 
 export async function updateTask(id: number, data: Partial<TaskFormData>) {
-  const update: any = { id, ...data };
+  const update: Record<string, unknown> = { id };
+  if (data.name !== undefined) update.name = data.name;
+  if (data.description !== undefined) update.description = data.description;
+  if (data.list_id !== undefined) update.list_id = data.list_id;
   if (data.estimated_time) {
     update.estimated_time = timeToMinutes(data.estimated_time);
   }
@@ -61,7 +64,10 @@ export async function updateTask(id: number, data: Partial<TaskFormData>) {
   } else if (data.recurring_end_date === '') {
     update.recurring_end_date = null;
   }
-  return await taskRepository.update(update);
+  if (data.priority !== undefined) update.priority = data.priority;
+  if (data.labels !== undefined) update.labels = data.labels;
+  if (data.recurring_pattern !== undefined) update.recurring_pattern = data.recurring_pattern;
+  return await taskRepository.update(update as unknown as UpdateTaskInput);
 }
 
 export async function completeTask(taskId: number, status: TaskStatus) {

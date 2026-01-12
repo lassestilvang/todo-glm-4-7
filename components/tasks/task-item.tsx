@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SubtaskItem } from './subtask-item';
-import type { Task, TaskStatus, Priority } from '@/features/tasks/types';
+import type { Task, TaskStatus, Priority, Label } from '@/features/tasks/types';
 
 interface TaskItemProps {
   task: Task;
@@ -36,8 +36,8 @@ export function TaskItem({
   onToggleExpand 
 }: TaskItemProps) {
   const [showSubtasks, setShowSubtasks] = useState(isExpanded);
-  const taskSubtasks = 'subtasks' in task ? (task as any).subtasks : [];
-  const taskLabels = 'labels' in task ? (task as any).labels : [];
+  const taskSubtasks = 'subtasks' in task ? task.subtasks as Task[] : [];
+  const taskLabels = 'labels' in task ? task.labels as Label[] : [];
   const hasSubtasks = taskSubtasks && taskSubtasks.length > 0;
   const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== 'done';
 
@@ -130,7 +130,7 @@ export function TaskItem({
               </Badge>
             )}
 
-             {taskLabels && taskLabels.length > 0 && taskLabels.map((label: any) => (
+               {taskLabels && taskLabels.length > 0 && taskLabels.map((label) => (
                <Badge
                  key={label.id}
                  variant="outline"
@@ -173,7 +173,7 @@ export function TaskItem({
             exit={{ opacity: 0, height: 0 }}
             className="mt-3 ml-6 space-y-2 border-l-2 pl-4"
           >
-            {taskSubtasks.map((subtask: any) => (
+            {taskSubtasks.map((subtask) => (
               <SubtaskItem
                 key={subtask.id}
                 task={subtask}

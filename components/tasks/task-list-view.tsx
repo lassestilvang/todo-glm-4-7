@@ -9,9 +9,10 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskItem } from './task-item';
 import { TaskForm } from './task-form';
-import type { Task, TaskStatus, List, Label } from '@/features/tasks/types';
+import type { Task, TaskStatus, List, Label, TaskFormData } from '@/features/tasks/types';
 import { createTask, updateTask } from '@/app/actions';
 import { useRouter } from 'next/navigation';
+import { type TaskFormValues } from '@/lib/validators/schema';
 
 interface TaskListViewProps {
   view: string;
@@ -41,11 +42,11 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
   const filteredTasks = tasks.filter(task => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
-    const taskLabels = 'labels' in task ? (task as any).labels : [];
+    const taskLabels = 'labels' in task ? task.labels as Label[] : [];
     return (
       task.name.toLowerCase().includes(query) ||
       task.description?.toLowerCase().includes(query) ||
-      taskLabels.some((l: any) => l.name.toLowerCase().includes(query))
+      taskLabels.some((l: Label) => l.name.toLowerCase().includes(query))
     );
   });
 
@@ -62,7 +63,7 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
     setTasks(prev => prev.filter(t => t.id !== taskId));
   };
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: TaskFormValues) => {
     if (selectedTask) {
       await updateTask(selectedTask.id, data);
     } else {

@@ -32,7 +32,7 @@ export const taskRepository = {
     const task = await taskRepository.findById(id);
     if (!task) return null;
 
-    const list = await getAsync<any>('SELECT * FROM lists WHERE id = ?', [task.list_id]);
+    const list = await getAsync<List>('SELECT * FROM lists WHERE id = ?', [task.list_id]);
     if (!list) return null;
     
     const labels = await allAsync<Label>(`
@@ -188,7 +188,7 @@ export const taskRepository = {
     }
 
     const fields: string[] = [];
-    const values: any[] = [];
+    const values: (string | number | Date | null)[] = [];
 
     if (input.name !== undefined) { fields.push('name = ?'); values.push(input.name); }
     if (input.description !== undefined) { fields.push('description = ?'); values.push(input.description); }
