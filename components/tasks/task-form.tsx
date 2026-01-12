@@ -46,7 +46,7 @@ const taskFormSchema = z.object({
   recurring_end_date: z.string().optional(),
 });
 
-type TaskFormValues = z.infer<typeof taskFormSchema>;
+export type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 interface TaskFormProps {
   open: boolean;

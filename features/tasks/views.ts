@@ -139,7 +139,7 @@ export const recurringTaskUtils = {
 
     const createInput: CreateTaskInput = {
       name: task.name,
-      description: task.description,
+      description: task.description || undefined,
       list_id: task.list_id,
       deadline: (nextDeadline as Date | undefined),
       estimated_time: task.estimated_time,

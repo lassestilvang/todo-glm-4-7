@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { migrate } from "@/lib/db/schema";
+import { Toaster } from "sonner";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 migrate().catch(console.error);
 
@@ -30,7 +32,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
+        <Toaster />
       </body>
     </html>
   );

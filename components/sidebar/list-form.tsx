@@ -29,7 +29,7 @@ import { createList } from '@/app/actions';
 const listFormSchema = z.object({
   name: z.string().min(1, 'List name is required'),
   emoji: z.string().min(1, 'Emoji is required').max(2, 'Emoji must be 1-2 characters'),
-  color: z.string().default('#3b82f6'),
+  color: z.string(),
 });
 
 type ListFormValues = z.infer<typeof listFormSchema>;
@@ -47,7 +47,6 @@ export function ListForm({ children }: ListFormProps) {
     defaultValues: {
       name: '',
       emoji: '📝',
-      color: '#3b82f6',
     },
   });
 

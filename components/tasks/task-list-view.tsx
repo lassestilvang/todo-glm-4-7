@@ -8,11 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskItem } from './task-item';
-import { TaskForm } from './task-form';
-import type { Task, TaskStatus, List, Label, TaskFormData } from '@/features/tasks/types';
-import { createTask, updateTask } from '@/app/actions';
+import { TaskForm, type TaskFormValues } from './task-form';
+import type { Task, TaskStatus, List, Label } from '@/features/tasks/types';
+import { createTask, updateTask, completeTask, deleteTask } from '@/app/actions';
 import { useRouter } from 'next/navigation';
-import { type TaskFormValues } from '@/lib/validators/schema';
+import { toast } from 'sonner';
 
 interface TaskListViewProps {
   view: string;
@@ -50,8 +50,16 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
     );
   });
 
-  const handleComplete = (taskId: number, status: TaskStatus) => {
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
+  const handleComplete = async (taskId: number, status: TaskStatus) => {
+    try {
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
+      await completeTask(taskId, status);
+      toast.success(status === 'done' ? 'Task completed' : 'Task marked as todo');
+    } catch (error) {
+      console.error('Failed to update task status:', error);
+      toast.error('Failed to update task status');
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: status === 'done' ? 'todo' : 'done' } : t));
+    }
   };
 
   const handleEdit = (task: Task) => {
@@ -59,19 +67,34 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
     setShowTaskForm(true);
   };
 
-  const handleDelete = (taskId: number) => {
-    setTasks(prev => prev.filter(t => t.id !== taskId));
+  const handleDelete = async (taskId: number) => {
+    try {
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      await deleteTask(taskId);
+      toast.success('Task deleted');
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      toast.error('Failed to delete task');
+      router.refresh();
+    }
   };
 
   const handleSubmit = async (data: TaskFormValues) => {
-    if (selectedTask) {
-      await updateTask(selectedTask.id, data);
-    } else {
-      await createTask(data);
+    try {
+      if (selectedTask) {
+        await updateTask(selectedTask.id, { ...data, labels: [], subtasks: [] });
+        toast.success('Task updated successfully');
+      } else {
+        await createTask({ ...data, labels: [], subtasks: [] });
+        toast.success('Task created successfully');
+      }
+      setShowTaskForm(false);
+      setSelectedTask(undefined);
+      router.refresh();
+    } catch (error) {
+      console.error('Task operation failed:', error);
+      toast.error(selectedTask ? 'Failed to update task' : 'Failed to create task');
     }
-    setShowTaskForm(false);
-    setSelectedTask(undefined);
-    router.refresh();
   };
 
   const handleNewTask = () => {
