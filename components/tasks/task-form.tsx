@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Calendar, Clock, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Select,
   SelectContent,
@@ -31,7 +31,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { type Task, List, Label } from '@/features/tasks/types';
+import { type Task, List } from '@/features/tasks/types';
 
 const taskFormSchema = z.object({
   name: z.string().min(1, 'Task name is required'),
@@ -54,10 +54,10 @@ interface TaskFormProps {
   onSubmit: (data: TaskFormValues) => void;
   task?: Task;
   lists: List[];
-  labels: Label[];
+  isSubmitting?: boolean;
 }
 
-export function TaskForm({ open, onClose, onSubmit, task, lists, labels }: TaskFormProps) {
+export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = false }: TaskFormProps) {
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
@@ -313,11 +313,20 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, labels }: TaskF
             )}
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={handleClose}>
+              <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button type="submit">
-                {task ? 'Update Task' : 'Create Task'}
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Spinner size="sm" className="mr-2" />
+                    {task ? 'Updating...' : 'Creating...'}
+                  </>
+                ) : (
+                  <>
+                    {task ? 'Update Task' : 'Create Task'}
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </form>

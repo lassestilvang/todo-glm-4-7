@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Filter, CheckCircle2, Circle } from 'lucide-react';
+import { Plus, Search, CheckCircle2, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -29,7 +29,9 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
   const [searchQuery, setSearchQuery] = useState('');
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
-  const [overdueCount, setOverdueCount] = useState(0);
+  const [completingTasks, setCompletingTasks] = useState<Set<number>>(new Set());
+  const [deletingTasks, setDeletingTasks] = useState<Set<number>>(new Set());
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setTasks(initialTasks);
@@ -52,6 +54,7 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
 
   const handleComplete = async (taskId: number, status: TaskStatus) => {
     try {
+      setCompletingTasks(prev => new Set(prev).add(taskId));
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
       await completeTask(taskId, status);
       toast.success(status === 'done' ? 'Task completed' : 'Task marked as todo');
@@ -59,6 +62,12 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
       console.error('Failed to update task status:', error);
       toast.error('Failed to update task status');
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: status === 'done' ? 'todo' : 'done' } : t));
+    } finally {
+      setCompletingTasks(prev => {
+        const next = new Set(prev);
+        next.delete(taskId);
+        return next;
+      });
     }
   };
 
@@ -69,6 +78,7 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
 
   const handleDelete = async (taskId: number) => {
     try {
+      setDeletingTasks(prev => new Set(prev).add(taskId));
       setTasks(prev => prev.filter(t => t.id !== taskId));
       await deleteTask(taskId);
       toast.success('Task deleted');
@@ -76,11 +86,18 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
       console.error('Failed to delete task:', error);
       toast.error('Failed to delete task');
       router.refresh();
+    } finally {
+      setDeletingTasks(prev => {
+        const next = new Set(prev);
+        next.delete(taskId);
+        return next;
+      });
     }
   };
 
   const handleSubmit = async (data: TaskFormValues) => {
     try {
+      setIsSubmitting(true);
       if (selectedTask) {
         await updateTask(selectedTask.id, { ...data, labels: [], subtasks: [] });
         toast.success('Task updated successfully');
@@ -94,6 +111,8 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
     } catch (error) {
       console.error('Task operation failed:', error);
       toast.error(selectedTask ? 'Failed to update task' : 'Failed to create task');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -171,6 +190,8 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
                   onComplete={handleComplete}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
+                  isCompleting={completingTasks.has(task.id)}
+                  isDeleting={deletingTasks.has(task.id)}
                 />
               ))
             )}
@@ -187,7 +208,7 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
         onSubmit={handleSubmit}
         task={selectedTask}
         lists={lists}
-        labels={labels}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

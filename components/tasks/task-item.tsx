@@ -3,11 +3,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Check, Clock, ChevronDown, ChevronRight, AlertCircle } from 'lucide-react';
+import { Check, Clock, ChevronDown, ChevronRight, AlertCircle, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { SubtaskItem } from './subtask-item';
 import type { Task, TaskStatus, Priority, Label } from '@/features/tasks/types';
 
@@ -18,6 +19,8 @@ interface TaskItemProps {
   onDelete?: (taskId: number) => void;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  isCompleting?: boolean;
+  isDeleting?: boolean;
 }
 
 const priorityColors: Record<Priority, string> = {
@@ -33,7 +36,9 @@ export function TaskItem({
   onEdit, 
   onDelete,
   isExpanded = false,
-  onToggleExpand 
+  onToggleExpand,
+  isCompleting = false,
+  isDeleting = false
 }: TaskItemProps) {
   const [showSubtasks, setShowSubtasks] = useState(isExpanded);
   const taskSubtasks = 'subtasks' in task ? task.subtasks as Task[] : [];
@@ -42,7 +47,9 @@ export function TaskItem({
   const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== 'done';
 
   const handleComplete = (checked: boolean) => {
-    onComplete?.(task.id, checked ? 'done' : 'todo');
+    if (!isCompleting) {
+      onComplete?.(task.id, checked ? 'done' : 'todo');
+    }
   };
 
   const isCompleted = task.status === 'done';
@@ -59,11 +66,16 @@ export function TaskItem({
       )}
     >
       <div className="flex items-start gap-3">
-        <Checkbox
-          checked={isCompleted}
-          onCheckedChange={handleComplete}
-          className="mt-0.5"
-        />
+        <div className="mt-0.5">
+          {isCompleting ? (
+            <Spinner size="sm" />
+          ) : (
+            <Checkbox
+              checked={isCompleted}
+              onCheckedChange={handleComplete}
+            />
+          )}
+        </div>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -157,9 +169,10 @@ export function TaskItem({
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-destructive hover:text-destructive"
-              onClick={() => onDelete(task.id)}
+              onClick={() => !isDeleting && onDelete(task.id)}
+              disabled={isDeleting}
             >
-              <Check className="h-4 w-4" />
+              {isDeleting ? <Spinner size="sm" /> : <Trash2 className="h-4 w-4" />}
             </Button>
           )}
         </div>
