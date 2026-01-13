@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { lazy, Suspense } from 'react';
 import { cn } from '@/lib/utils';
 import { CalendarDays, Clock, ListTodo, Home, Plus, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +10,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import type { List, Label } from '@/features/tasks/types';
-import { ListForm } from './list-form';
+
+const ListForm = lazy(() => import('./list-form').then(m => ({ default: m.ListForm })));
 
 interface SidebarProps {
   lists?: List[];
@@ -73,11 +75,17 @@ export function Sidebar({ lists = [], labels = [], overdueCount = 0 }: SidebarPr
               <h2 className="text-xs font-semibold text-muted-foreground">
                 Lists
               </h2>
-              <ListForm>
-                <Button variant="ghost" size="icon" className="h-5 w-5">
+              <Suspense fallback={
+                <Button variant="ghost" size="icon" className="h-5 w-5" disabled>
                   <Plus className="h-3 w-3" />
                 </Button>
-              </ListForm>
+              }>
+                <ListForm>
+                  <Button variant="ghost" size="icon" className="h-5 w-5">
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </ListForm>
+              </Suspense>
             </div>
             <div className="space-y-1">
               {lists.map((list) => {

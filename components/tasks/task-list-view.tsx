@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, CheckCircle2, Circle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -9,10 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { TaskItem } from './task-item';
-import { TaskForm, type TaskFormValues } from './task-form';
 import type { Task, TaskStatus, List, Label, ViewType } from '@/features/tasks/types';
 import { createTask, updateTask, completeTask, deleteTask, getTasksByView } from '@/app/actions';
 import { toast } from 'sonner';
+import type { TaskFormValues } from './task-form';
+
+const TaskForm = lazy(() => import('./task-form').then(m => ({ default: m.TaskForm })));
 
 interface TaskListViewProps {
   view: string;
@@ -306,17 +308,19 @@ export function TaskListView({ view, lists, labels: _labels, initialTasks, curre
         {announcement}
       </div>
 
-      <TaskForm
-        open={showTaskForm}
-        onClose={() => {
-          setShowTaskForm(false);
-          setSelectedTask(undefined);
-        }}
-        onSubmit={handleSubmit}
-        task={selectedTask}
-        lists={lists}
-        isSubmitting={createMutation.isPending || updateMutation.isPending}
-      />
+      <Suspense fallback={null}>
+        <TaskForm
+          open={showTaskForm}
+          onClose={() => {
+            setShowTaskForm(false);
+            setSelectedTask(undefined);
+          }}
+          onSubmit={handleSubmit}
+          task={selectedTask}
+          lists={lists}
+          isSubmitting={createMutation.isPending || updateMutation.isPending}
+        />
+      </Suspense>
     </div>
   );
 }
