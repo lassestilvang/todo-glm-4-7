@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'bun:test';
 import { recurringTaskUtils } from '@/features/tasks/views';
 import type { Task } from '@/features/tasks/types';
-import { addDays, addWeeks, addMonths, addYears, startOfDay } from 'date-fns';
+import { addDays, addWeeks, startOfDay } from 'date-fns';
 
 describe('Recurring Task Utils', () => {
   describe('getNextOccurrence', () => {

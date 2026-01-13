@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { taskRepository } from '@/features/tasks/actions';
 import { listRepository } from '@/features/lists/actions';
 import { viewUtils } from '@/features/tasks/views';
-import { startOfDay, endOfDay, addDays } from 'date-fns';
+import { addDays } from 'date-fns';
 
 describe('View Utils', () => {
   let listId: number;
@@ -34,7 +34,7 @@ describe('View Utils', () => {
         deadline: today,
       });
 
-      const task2 = await taskRepository.create({
+      const _task2 = await taskRepository.create({
         name: 'Tomorrow Task',
         list_id: listId,
         deadline: addDays(today, 1),

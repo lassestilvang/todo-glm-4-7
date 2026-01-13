@@ -33,18 +33,19 @@ import {
 } from '@/components/ui/form';
 import { type Task, List } from '@/features/tasks/types';
 import { formatDateInput, minutesToTime } from '@/lib/utils/time';
+import { taskSchema } from '@/lib/validators/schema';
 
-const taskFormSchema = z.object({
-  name: z.string().min(1, 'Task name is required'),
-  description: z.string().optional(),
-  list_id: z.number().int().positive('List ID is required'),
-  deadline: z.string().optional(),
-  reminder_time: z.string().optional(),
-  estimated_time: z.string().optional(),
-  actual_time: z.string().optional(),
-  priority: z.enum(['high', 'medium', 'low', 'none'] as const),
-  recurring_pattern: z.enum(['none', 'daily', 'weekly', 'weekdays', 'monthly', 'yearly', 'custom'] as const),
-  recurring_end_date: z.string().optional(),
+const taskFormSchema = taskSchema.pick({
+  name: true,
+  description: true,
+  list_id: true,
+  deadline: true,
+  reminder_time: true,
+  estimated_time: true,
+  actual_time: true,
+  priority: true,
+  recurring_pattern: true,
+  recurring_end_date: true,
 });
 
 export type TaskFormValues = z.infer<typeof taskFormSchema>;

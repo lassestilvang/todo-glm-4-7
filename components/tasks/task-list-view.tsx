@@ -22,7 +22,7 @@ interface TaskListViewProps {
   currentList?: List;
 }
 
-export function TaskListView({ view, lists, labels, initialTasks, currentList }: TaskListViewProps) {
+export function TaskListView({ view, lists, labels: _labels, initialTasks, currentList }: TaskListViewProps) {
   const queryClient = useQueryClient();
   const [showCompleted, setShowCompleted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');

@@ -23,7 +23,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Plus } from 'lucide-react';
 import { createList } from '@/app/actions';
 
 const listFormSchema = z.object({

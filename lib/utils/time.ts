@@ -1,4 +1,4 @@
-import { format, formatISO, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
 import { format as formatTz, toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 export type Timezone = string;

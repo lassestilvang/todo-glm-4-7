@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { Priority, RecurringPattern, TaskStatus } from '@/features/tasks/types';
 
 export type TaskFormData = z.infer<typeof taskSchema>;
 

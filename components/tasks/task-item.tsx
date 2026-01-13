@@ -30,13 +30,13 @@ const priorityColors: Record<Priority, string> = {
   none: 'bg-muted text-muted-foreground',
 };
 
-export function TaskItem({ 
-  task, 
-  onComplete, 
-  onEdit, 
+export function TaskItem({
+  task,
+  onComplete,
+  onEdit,
   onDelete,
   isExpanded = false,
-  onToggleExpand,
+  onToggleExpand: _onToggleExpand,
   isCompleting = false,
   isDeleting = false
 }: TaskItemProps) {

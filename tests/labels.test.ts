@@ -106,7 +106,7 @@ describe('Label Repository', () => {
       const list = await listRepository.create('Test List', '📋', '#3b82f6');
       const label = await labelRepository.create('Urgent', '🔥', '#ef4444');
       
-      const task = await taskRepository.create({
+      const _task = await taskRepository.create({
         name: 'Test Task',
         list_id: list.id,
         labels: [label.id],

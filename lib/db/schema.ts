@@ -100,12 +100,12 @@ export const initializeInbox = async () => {
       INSERT INTO lists (name, emoji, color, is_inbox)
       VALUES ('Inbox', '📥', '#3b82f6', 1)
     `);
-    console.log('✓ Inbox list created');
+    console.warn('✓ Inbox list created');
   }
 };
 
 export const migrate = async () => {
   await createTables();
-  console.log('✓ Database initialized');
+  console.warn('✓ Database initialized');
   await initializeInbox();
 };

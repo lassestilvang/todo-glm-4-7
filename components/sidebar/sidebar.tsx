@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Inbox, CalendarDays, Clock, ListTodo, Home, ChevronRight, Plus, Settings, Tags, Folder } from 'lucide-react';
+import { CalendarDays, Clock, ListTodo, Home, Plus, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
