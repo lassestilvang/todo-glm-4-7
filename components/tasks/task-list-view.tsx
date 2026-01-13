@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, CheckCircle2, Circle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskItem } from './task-item';
 import { TaskForm, type TaskFormValues } from './task-form';
 import type { Task, TaskStatus, List, Label, ViewType } from '@/features/tasks/types';
@@ -174,6 +174,17 @@ export function TaskListView({ view, lists, labels: _labels, initialTasks, curre
     setShowTaskForm(true);
   };
 
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: filteredTasks.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 140,
+    overscan: 5,
+  });
+
+  const useVirtual = filteredTasks.length > 20;
+
   return (
     <div className="flex h-full flex-col">
       <div className="border-b p-4">
@@ -218,7 +229,7 @@ export function TaskListView({ view, lists, labels: _labels, initialTasks, curre
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-4">
+      <div ref={parentRef} className="flex-1 p-4 overflow-y-auto">
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
             {filteredTasks.length === 0 ? (
@@ -237,6 +248,38 @@ export function TaskListView({ view, lists, labels: _labels, initialTasks, curre
                     : 'Create a new task to get started'}
                 </p>
               </motion.div>
+            ) : useVirtual ? (
+              <div
+                className="relative"
+                style={{ height: `${virtualizer.getTotalSize()}px` }}
+              >
+                {virtualizer.getVirtualItems().map((virtualItem) => {
+                  const task = filteredTasks[virtualItem.index];
+                  return (
+                    <div
+                      key={virtualItem.key}
+                      data-index={virtualItem.index}
+                      ref={virtualizer.measureElement}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        transform: `translateY(${virtualItem.start}px)`,
+                      }}
+                    >
+                      <TaskItem
+                        task={task}
+                        onComplete={handleComplete}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        isCompleting={completeMutation.isPending}
+                        isDeleting={deleteMutation.isPending}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
               filteredTasks.map((task) => (
                 <TaskItem
@@ -252,7 +295,7 @@ export function TaskListView({ view, lists, labels: _labels, initialTasks, curre
             )}
           </AnimatePresence>
         </div>
-      </ScrollArea>
+      </div>
 
       <div
         role="status"
