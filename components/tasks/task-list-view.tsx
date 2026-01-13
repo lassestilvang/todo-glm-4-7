@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, CheckCircle2, Circle } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TaskItem } from './task-item';
 import { TaskForm, type TaskFormValues } from './task-form';
-import type { Task, TaskStatus, List, Label } from '@/features/tasks/types';
-import { createTask, updateTask, completeTask, deleteTask } from '@/app/actions';
-import { useRouter } from 'next/navigation';
+import type { Task, TaskStatus, List, Label, ViewType } from '@/features/tasks/types';
+import { createTask, updateTask, completeTask, deleteTask, getTasksByView } from '@/app/actions';
 import { toast } from 'sonner';
 
 interface TaskListViewProps {
@@ -23,57 +23,68 @@ interface TaskListViewProps {
 }
 
 export function TaskListView({ view, lists, labels, initialTasks, currentList }: TaskListViewProps) {
-  const router = useRouter();
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const queryClient = useQueryClient();
   const [showCompleted, setShowCompleted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
-  const [completingTasks, setCompletingTasks] = useState<Set<number>>(new Set());
-  const [deletingTasks, setDeletingTasks] = useState<Set<number>>(new Set());
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [announcement, setAnnouncement] = useState('');
 
-  useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
+  const { data: tasks = initialTasks } = useQuery({
+    queryKey: ['tasks', view, showCompleted],
+    queryFn: () => getTasksByView(view as ViewType, showCompleted),
+    initialData: initialTasks,
+  });
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
   };
 
-  const filteredTasks = tasks.filter(task => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    const taskLabels = 'labels' in task ? task.labels as Label[] : [];
-    return (
-      task.name.toLowerCase().includes(query) ||
-      task.description?.toLowerCase().includes(query) ||
-      taskLabels.some((l: Label) => l.name.toLowerCase().includes(query))
-    );
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      const taskLabels = 'labels' in task ? task.labels as Label[] : [];
+      return (
+        task.name.toLowerCase().includes(query) ||
+        task.description?.toLowerCase().includes(query) ||
+        taskLabels.some((l: Label) => l.name.toLowerCase().includes(query))
+      );
+    });
+  }, [tasks, searchQuery]);
+
+  const completeMutation = useMutation({
+    mutationFn: async ({ taskId, status }: { taskId: number; status: TaskStatus }) => {
+      return completeTask(taskId, status);
+    },
+    onMutate: async ({ taskId, status }) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks', view, showCompleted] });
+      const previousTasks = queryClient.getQueryData(['tasks', view, showCompleted]) as Task[];
+      const task = previousTasks?.find(t => t.id === taskId);
+      const taskName = task?.name || 'Task';
+
+      queryClient.setQueryData(['tasks', view, showCompleted], (old: Task[]) =>
+        old.map(t => t.id === taskId ? { ...t, status } : t)
+      );
+
+      return { previousTasks, taskId, status, taskName };
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['tasks', view, showCompleted], context?.previousTasks);
+      toast.error('Failed to update task status');
+    },
+    onSuccess: (_, variables, context) => {
+      const message = variables.status === 'done' ? `Task "${context?.taskName}" completed` : `Task "${context?.taskName}" marked as todo`;
+      toast.success(variables.status === 'done' ? 'Task completed' : 'Task marked as todo');
+      setAnnouncement(message);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', view, showCompleted] });
+    },
   });
 
-  const handleComplete = async (taskId: number, status: TaskStatus) => {
-    const task = tasks.find(t => t.id === taskId);
-    const taskName = task?.name || 'Task';
-    try {
-      setCompletingTasks(prev => new Set(prev).add(taskId));
-      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
-      await completeTask(taskId, status);
-      const message = status === 'done' ? `Task "${taskName}" completed` : `Task "${taskName}" marked as todo`;
-      toast.success(status === 'done' ? 'Task completed' : 'Task marked as todo');
-      setAnnouncement(message);
-    } catch (error) {
-      console.error('Failed to update task status:', error);
-      toast.error('Failed to update task status');
-      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: status === 'done' ? 'todo' : 'done' } : t));
-    } finally {
-      setCompletingTasks(prev => {
-        const next = new Set(prev);
-        next.delete(taskId);
-        return next;
-      });
-    }
+  const handleComplete = (taskId: number, status: TaskStatus) => {
+    completeMutation.mutate({ taskId, status });
   };
 
   const handleEdit = (task: Task) => {
@@ -81,51 +92,80 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
     setShowTaskForm(true);
   };
 
-  const handleDelete = async (taskId: number) => {
-    const task = tasks.find(t => t.id === taskId);
-    const taskName = task?.name || 'Task';
-    try {
-      setDeletingTasks(prev => new Set(prev).add(taskId));
-      setTasks(prev => prev.filter(t => t.id !== taskId));
-      await deleteTask(taskId);
-      const message = `Task "${taskName}" deleted`;
+  const deleteMutation = useMutation({
+    mutationFn: async (taskId: number) => {
+      return deleteTask(taskId);
+    },
+    onMutate: async (taskId) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks', view, showCompleted] });
+      const previousTasks = queryClient.getQueryData(['tasks', view, showCompleted]) as Task[];
+      const task = previousTasks?.find(t => t.id === taskId);
+      const taskName = task?.name || 'Task';
+
+      queryClient.setQueryData(['tasks', view, showCompleted], (old: Task[]) =>
+        old.filter(t => t.id !== taskId)
+      );
+
+      return { previousTasks, taskId, taskName };
+    },
+    onError: (err, taskId, context) => {
+      queryClient.setQueryData(['tasks', view, showCompleted], context?.previousTasks);
+      toast.error('Failed to delete task');
+    },
+    onSuccess: (_, __, context) => {
+      const message = `Task "${context?.taskName}" deleted`;
       toast.success('Task deleted');
       setAnnouncement(message);
-    } catch (error) {
-      console.error('Failed to delete task:', error);
-      toast.error('Failed to delete task');
-      router.refresh();
-    } finally {
-      setDeletingTasks(prev => {
-        const next = new Set(prev);
-        next.delete(taskId);
-        return next;
-      });
-    }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', view, showCompleted] });
+    },
+  });
+
+  const handleDelete = (taskId: number) => {
+    deleteMutation.mutate(taskId);
   };
+
+  const createMutation = useMutation({
+    mutationFn: async (data: TaskFormValues) => {
+      return createTask({ ...data, labels: [], subtasks: [] });
+    },
+    onSuccess: (_, variables) => {
+      const message = `Task "${variables.name}" created successfully`;
+      toast.success('Task created successfully');
+      setAnnouncement(message);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', view, showCompleted] });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ taskId, data }: { taskId: number; data: TaskFormValues }) => {
+      return updateTask(taskId, { ...data, labels: [], subtasks: [] });
+    },
+    onSuccess: (_, variables) => {
+      const message = `Task "${variables.data.name}" updated successfully`;
+      toast.success('Task updated successfully');
+      setAnnouncement(message);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', view, showCompleted] });
+    },
+  });
 
   const handleSubmit = async (data: TaskFormValues) => {
     try {
-      setIsSubmitting(true);
       if (selectedTask) {
-        await updateTask(selectedTask.id, { ...data, labels: [], subtasks: [] });
-        const message = `Task "${data.name}" updated successfully`;
-        toast.success('Task updated successfully');
-        setAnnouncement(message);
+        updateMutation.mutate({ taskId: selectedTask.id, data });
       } else {
-        await createTask({ ...data, labels: [], subtasks: [] });
-        const message = `Task "${data.name}" created successfully`;
-        toast.success('Task created successfully');
-        setAnnouncement(message);
+        createMutation.mutate(data);
       }
       setShowTaskForm(false);
       setSelectedTask(undefined);
-      router.refresh();
     } catch (error) {
       console.error('Task operation failed:', error);
       toast.error(selectedTask ? 'Failed to update task' : 'Failed to create task');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -205,8 +245,8 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
                   onComplete={handleComplete}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
-                  isCompleting={completingTasks.has(task.id)}
-                  isDeleting={deletingTasks.has(task.id)}
+                  isCompleting={completeMutation.isPending}
+                  isDeleting={deleteMutation.isPending}
                 />
               ))
             )}
@@ -232,7 +272,7 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
         onSubmit={handleSubmit}
         task={selectedTask}
         lists={lists}
-        isSubmitting={isSubmitting}
+        isSubmitting={createMutation.isPending || updateMutation.isPending}
       />
     </div>
   );

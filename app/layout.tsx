@@ -4,6 +4,7 @@ import "./globals.css";
 import { migrate } from "@/lib/db/schema";
 import { Toaster } from "sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { Providers } from "@/components/providers";
 
 migrate().catch(console.error);
 
@@ -32,10 +33,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
-        <Toaster />
+        <Providers>
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );

@@ -3,7 +3,7 @@
 **Project:** Daily Planner
 **Last Updated:** 2026-01-13
 **Analysis Scope:** Best Practices, Architecture, Performance, UX, and Future Features
-**Progress Update:** Error boundaries and toast notifications implemented (2026-01-12), Loading states added (2026-01-12), Time handling with timezone support completed (2026-01-12), Basic accessibility improvements completed (2026-01-13)
+**Progress Update:** Error boundaries and toast notifications implemented (2026-01-12), Loading states added (2026-01-12), Time handling with timezone support completed (2026-01-12), Basic accessibility improvements completed (2026-01-13), React Query for state management completed (2026-01-13)
 
 ---
 
@@ -132,7 +132,7 @@ This Daily Planner application demonstrates solid foundational architecture with
 
 ---
 
-#### 3. State Management & Data Synchronization
+#### ✅ 3. State Management & Data Synchronization (COMPLETED 2026-01-13)
 
 **Issues:**
 - Client state not updated after server actions (`components/tasks/task-list-view.tsx:54`)
@@ -140,32 +140,99 @@ This Daily Planner application demonstrates solid foundational architecture with
 - Race conditions possible with rapid actions
 - `router.refresh()` causes full page reload
 
-**Recommendations:**
-```typescript
-// Use React Query (TanStack Query) for server state
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+**Completed:**
+- ✅ Installed `@tanstack/react-query` dependency
+- ✅ Created `components/providers.tsx` with QueryClientProvider wrapper
+- ✅ Added QueryClientProvider to app layout
+- ✅ Converted task operations to React Query mutations with optimistic updates
+- ✅ Updated TaskListView to use `useQuery` for task data fetching
+- ✅ Implemented `onMutate`, `onError`, `onSuccess`, and `onSettled` handlers for optimistic updates
+- ✅ Created `getTasksByView` server action to enable server-side view queries
+- ✅ Removed `router.refresh()` calls in favor of React Query cache invalidation
+- ✅ Added memoization for filtered tasks with `useMemo`
 
-const mutation = useMutation({
-  mutationFn: (data) => updateTask(taskId, data),
-  onMutate: async (newData) => {
-    await queryClient.cancelQueries({ queryKey: ['tasks'] });
-    const previous = queryClient.getQueryData(['tasks']);
-    queryClient.setQueryData(['tasks'], old => 
-      updateTaskOptimistically(old, taskId, newData)
+**Files Modified:**
+- `package.json` - Added `@tanstack/react-query` dependency
+- `components/providers.tsx` - Created new Providers component with QueryClientProvider
+- `app/layout.tsx` - Added Providers wrapper around children
+- `app/actions.ts` - Added `getTasksByView` server action
+- `components/tasks/task-list-view.tsx` - Converted to use React Query hooks with optimistic updates
+
+**Impact:** High - Improves perceived performance and reduces network requests. Tasks now update optimistically on the client before server confirmation, errors are handled gracefully with rollbacks, and full page reloads are eliminated. Query caching and background refetching keep data fresh without unnecessary requests.
+
+**Technical Implementation:**
+```typescript
+// QueryClient configuration with sensible defaults
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+// Optimistic mutation example
+const completeMutation = useMutation({
+  mutationFn: async ({ taskId, status }) => completeTask(taskId, status),
+  onMutate: async ({ taskId, status }) => {
+    await queryClient.cancelQueries({ queryKey: ['tasks', view, showCompleted] });
+    const previousTasks = queryClient.getQueryData(['tasks', view, showCompleted]);
+    queryClient.setQueryData(['tasks', view, showCompleted], (old) =>
+      old.map(t => t.id === taskId ? { ...t, status } : t)
     );
-    return { previous };
+    return { previousTasks, taskId, status };
   },
   onError: (err, variables, context) => {
-    queryClient.setQueryData(['tasks'], context.previous);
-    toast.error('Update failed');
+    queryClient.setQueryData(['tasks', view, showCompleted], context?.previousTasks);
+    toast.error('Failed to update task status');
+  },
+  onSuccess: (_, variables, context) => {
+    const message = variables.status === 'done' ? `Task completed` : `Task marked as todo`;
+    toast.success(variables.status === 'done' ? 'Task completed' : 'Task marked as todo');
+    setAnnouncement(message);
   },
   onSettled: () => {
-    queryClient.invalidateQueries({ queryKey: ['tasks'] });
-  }
+    queryClient.invalidateQueries({ queryKey: ['tasks', view, showCompleted] });
+  },
 });
 ```
 
-**Impact:** High - Improves perceived performance and reduces network requests
+---
+
+#### 3. Performance Optimizations
+
+**Issues:**
+- No memoization for expensive computations
+- Large lists render all items without virtualization
+- Repeated calculations in render cycles
+- No image optimization for attachments
+
+**Recommendations:**
+```typescript
+// Memoize expensive operations
+import { useMemo } from 'react';
+
+const filteredTasks = useMemo(() => 
+  tasks.filter(task => {
+    const query = searchQuery.toLowerCase();
+    return task.name.toLowerCase().includes(query) ||
+           task.description?.toLowerCase().includes(query);
+  }), 
+  [tasks, searchQuery]
+);
+
+// Use react-window or TanStack Virtual for large lists
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+const virtualizer = useVirtualizer({
+  count: tasks.length,
+  getScrollElement: () => parentRef.current,
+  estimateSize: () => 100,
+});
+```
+
+**Impact:** High - App remains responsive with large datasets
 
 ---
 
@@ -927,11 +994,11 @@ Sentry.init({
     - ✅ Fix time handling issues (COMPLETED 2026-01-12)
     - ✅ Add basic accessibility improvements (COMPLETED 2026-01-13)
 
-2. **Week 3-4: Performance & UX**
-   - Implement React Query for state management
-   - Add virtual scrolling for large lists
-   - Optimize bundle size (code splitting)
-   - Add comprehensive ARIA labels
+2. **Week 3-4: Performance & UX** (1/4 Complete)
+    - ✅ Implement React Query for state management (COMPLETED 2026-01-13)
+    - Add virtual scrolling for large lists
+    - Optimize bundle size (code splitting)
+    - Add comprehensive ARIA labels
 
 3. **Month 2: Feature Enhancements**
    - Build advanced search and filtering

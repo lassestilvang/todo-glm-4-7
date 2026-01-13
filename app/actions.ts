@@ -2,8 +2,9 @@
 
 import { taskRepository } from '@/features/tasks/actions';
 import { listRepository } from '@/features/lists/actions';
-import type { TaskFormData, TaskStatus, CreateTaskInput, UpdateTaskInput } from '@/features/tasks/types';
+import type { TaskFormData, TaskStatus, CreateTaskInput, UpdateTaskInput, ViewType } from '@/features/tasks/types';
 import { timeToMinutes, parseDateInput } from '@/lib/utils/time';
+import { viewUtils } from '@/features/tasks/views';
 
 export async function createTask(data: TaskFormData) {
   const taskInput: CreateTaskInput = {
@@ -56,4 +57,8 @@ export async function deleteTask(taskId: number) {
 
 export async function createList(name: string, emoji: string, color: string) {
   return await listRepository.create(name, emoji, color);
+}
+
+export async function getTasksByView(view: ViewType, showCompleted: boolean = false) {
+  return viewUtils.getTasksByView(view, showCompleted);
 }
