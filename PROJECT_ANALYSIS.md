@@ -1,9 +1,9 @@
 # Project Analysis & Improvement Roadmap
 
 **Project:** Daily Planner
-**Last Updated:** 2026-01-12
+**Last Updated:** 2026-01-13
 **Analysis Scope:** Best Practices, Architecture, Performance, UX, and Future Features
-**Progress Update:** Error boundaries and toast notifications implemented (2026-01-12), Loading states added (2026-01-12), Time handling with timezone support completed (2026-01-12)
+**Progress Update:** Error boundaries and toast notifications implemented (2026-01-12), Loading states added (2026-01-12), Time handling with timezone support completed (2026-01-12), Basic accessibility improvements completed (2026-01-13)
 
 ---
 
@@ -205,7 +205,7 @@ const virtualizer = useVirtualizer({
 
 ---
 
-#### 4. Accessibility (A11y)
+#### ✅ 4. Accessibility (A11y) (COMPLETED 2026-01-13)
 
 **Issues:**
 - Missing ARIA labels in TaskItem component
@@ -213,33 +213,23 @@ const virtualizer = useVirtualizer({
 - Incomplete keyboard navigation
 - No screen reader announcements for task completion
 
-**Recommendations:**
-```tsx
-// Add ARIA attributes
-<Button
-  aria-label={isCompleted ? 'Mark task as incomplete' : 'Mark task as complete'}
-  onClick={() => onComplete?.(task.id, isCompleted ? 'todo' : 'done')}
->
-  <Checkbox checked={isCompleted} />
-</Button>
+**Completed:**
+- ✅ Added `.sr-only` utility class to globals.css for screen-reader-only content
+- ✅ Added ARIA labels to all interactive elements in TaskItem component (checkbox, expand button, task title, edit/delete buttons)
+- ✅ Added `role="listitem"` and descriptive `aria-label` to task cards
+- ✅ Added `aria-expanded` to expand/collapse subtask buttons
+- ✅ Added keyboard navigation to task title (Enter and Space keys)
+- ✅ Added live region (`aria-live="polite"`) to TaskListView for screen reader announcements
+- ✅ Screen reader announcements for task completion, creation, update, and deletion
+- ✅ Added ARIA labels to search input and show completed toggle
+- ✅ Added proper form labels with `htmlFor` and `id` attributes to TaskForm
+- ✅ Added `aria-required` to required form fields
+- ✅ Added `aria-describedby` for form field hints (estimated/actual time)
+- ✅ Added `aria-hidden="true"` to decorative icons
+- ✅ Dialog already has proper focus management from Radix UI
+- ✅ Added `id` to DialogDescription and linked via `aria-describedby` on DialogContent
 
-// Use Radix Dialog's focus management
-<Dialog>
-  <DialogTrigger asChild>
-    <Button aria-label="Create new task">New Task</Button>
-  </DialogTrigger>
-  <DialogContent aria-describedby="task-description">
-    {/* Content */}
-  </DialogContent>
-</Dialog>
-
-// Add live region for announcements
-<div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-  {announcement}
-</div>
-```
-
-**Impact:** High - Required for WCAG compliance and inclusive design
+**Impact:** High - Required for WCAG compliance and inclusive design. All major interactive elements now have proper ARIA labels, keyboard navigation works for essential actions, and screen reader users receive announcements for all task operations.
 
 ---
 
@@ -421,6 +411,40 @@ if (file.fileSize > MAX_FILE_SIZE) {
 - `package.json` - Added `date-fns-tz` dependency
 
 **Impact:** Medium - Critical for users in different time zones. All dates are now consistently stored in UTC and displayed in the user's local timezone, preventing timezone-related bugs and confusion.
+
+---
+
+#### ✅ 10. Accessibility (A11y) (COMPLETED 2026-01-13)
+
+**Issues:**
+- Missing ARIA labels in TaskItem component
+- No focus trap in dialogs
+- Incomplete keyboard navigation
+- No screen reader announcements for task completion
+
+**Completed:**
+- ✅ Added `.sr-only` utility class to globals.css for screen-reader-only content
+- ✅ Added ARIA labels to all interactive elements in TaskItem component (checkbox, expand button, task title, edit/delete buttons)
+- ✅ Added `role="listitem"` and descriptive `aria-label` to task cards
+- ✅ Added `aria-expanded` to expand/collapse subtask buttons
+- ✅ Added keyboard navigation to task title (Enter and Space keys)
+- ✅ Added live region (`aria-live="polite"`) to TaskListView for screen reader announcements
+- ✅ Screen reader announcements for task completion, creation, update, and deletion
+- ✅ Added ARIA labels to search input and show completed toggle
+- ✅ Added proper form labels with `htmlFor` and `id` attributes to TaskForm
+- ✅ Added `aria-required` to required form fields
+- ✅ Added `aria-describedby` for form field hints (estimated/actual time)
+- ✅ Added `aria-hidden="true"` to decorative icons
+- ✅ Dialog already has proper focus management from Radix UI
+- ✅ Added `id` to DialogDescription and linked via `aria-describedby` on DialogContent
+
+**Files Modified:**
+- `app/globals.css` - Added `.sr-only` class for screen-reader-only content
+- `components/tasks/task-item.tsx` - Added ARIA labels, keyboard navigation, role attributes
+- `components/tasks/task-list-view.tsx` - Added live region for announcements, ARIA labels to controls
+- `components/tasks/task-form.tsx` - Added proper form labels, ARIA attributes to inputs
+
+**Impact:** High - Required for WCAG compliance and inclusive design. All major interactive elements now have proper ARIA labels, keyboard navigation works for essential actions, and screen reader users receive announcements for all task operations.
 
 ---
 
@@ -901,7 +925,7 @@ Sentry.init({
     - ✅ Implement error boundaries and toast notifications (COMPLETED 2026-01-12)
     - ✅ Add loading states for all async operations (COMPLETED 2026-01-12)
     - ✅ Fix time handling issues (COMPLETED 2026-01-12)
-    - Add basic accessibility improvements
+    - ✅ Add basic accessibility improvements (COMPLETED 2026-01-13)
 
 2. **Week 3-4: Performance & UX**
    - Implement React Query for state management

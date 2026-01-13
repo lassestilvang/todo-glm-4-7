@@ -116,10 +116,10 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="task-description">
         <DialogHeader>
           <DialogTitle>{task ? 'Edit Task' : 'New Task'}</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="task-description">
             {task ? 'Update your task details below.' : 'Create a new task to get started.'}
           </DialogDescription>
         </DialogHeader>
@@ -131,9 +131,14 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = 
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Task Name</FormLabel>
+                  <FormLabel htmlFor="task-name">Task Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter task name" {...field} />
+                    <Input
+                      placeholder="Enter task name"
+                      {...field}
+                      id="task-name"
+                      aria-required="true"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -145,13 +150,14 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = 
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel htmlFor="task-description-field">Description</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Add a description (optional)"
                       className="resize-none"
                       rows={3}
                       {...field}
+                      id="task-description-field"
                     />
                   </FormControl>
                   <FormMessage />
@@ -165,10 +171,10 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = 
                 name="list_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>List</FormLabel>
+                    <FormLabel htmlFor="task-list">List</FormLabel>
                     <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={String(field.value)}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger id="task-list">
                           <SelectValue placeholder="Select a list" />
                         </SelectTrigger>
                       </FormControl>
@@ -190,10 +196,10 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = 
                 name="priority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Priority</FormLabel>
+                    <FormLabel htmlFor="task-priority">Priority</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger id="task-priority">
                           <SelectValue placeholder="Select priority" />
                         </SelectTrigger>
                       </FormControl>
@@ -216,9 +222,9 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = 
                 name="deadline"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Deadline</FormLabel>
+                    <FormLabel htmlFor="task-deadline">Deadline</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <Input type="datetime-local" {...field} id="task-deadline" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -230,9 +236,9 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = 
                 name="reminder_time"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Reminder</FormLabel>
+                    <FormLabel htmlFor="task-reminder">Reminder</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <Input type="datetime-local" {...field} id="task-reminder" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -246,10 +252,13 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = 
                 name="estimated_time"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Estimated Time (HH:mm)</FormLabel>
+                    <FormLabel htmlFor="task-estimated-time">Estimated Time (HH:mm)</FormLabel>
                     <FormControl>
-                      <Input placeholder="01:30" {...field} />
+                      <Input placeholder="01:30" {...field} id="task-estimated-time" aria-describedby="estimated-time-hint" />
                     </FormControl>
+                    <p id="estimated-time-hint" className="text-xs text-muted-foreground">
+                      Enter time in HH:mm format (e.g., 01:30 for 1 hour 30 minutes)
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -260,10 +269,13 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = 
                 name="actual_time"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Actual Time (HH:mm)</FormLabel>
+                    <FormLabel htmlFor="task-actual-time">Actual Time (HH:mm)</FormLabel>
                     <FormControl>
-                      <Input placeholder="01:30" {...field} />
+                      <Input placeholder="01:30" {...field} id="task-actual-time" aria-describedby="actual-time-hint" />
                     </FormControl>
+                    <p id="actual-time-hint" className="text-xs text-muted-foreground">
+                      Enter time in HH:mm format (e.g., 01:30 for 1 hour 30 minutes)
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -275,10 +287,10 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = 
               name="recurring_pattern"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Recurring</FormLabel>
+                  <FormLabel htmlFor="task-recurring">Recurring</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger id="task-recurring">
                         <SelectValue placeholder="Select recurrence pattern" />
                       </SelectTrigger>
                     </FormControl>
@@ -303,9 +315,9 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = 
                 name="recurring_end_date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Recurring End Date</FormLabel>
+                    <FormLabel htmlFor="task-recurring-end">Recurring End Date</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <Input type="datetime-local" {...field} id="task-recurring-end" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

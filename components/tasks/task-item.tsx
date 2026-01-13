@@ -54,6 +54,14 @@ export function TaskItem({
 
   const isCompleted = task.status === 'done';
 
+  const getAriaLabel = () => {
+    const statusText = isCompleted ? 'completed' : 'not completed';
+    const priorityText = task.priority !== 'none' ? `priority ${task.priority}` : '';
+    const overdueText = taskIsOverdue ? 'overdue' : '';
+    const labels = taskLabels.length > 0 ? `labels: ${taskLabels.map(l => l.name).join(', ')}` : '';
+    return `Task: ${task.name}, ${statusText}${priorityText ? `, ${priorityText}` : ''}${overdueText ? `, ${overdueText}` : ''}${labels ? `, ${labels}` : ''}`;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -64,15 +72,18 @@ export function TaskItem({
         isCompleted && 'opacity-60',
         taskIsOverdue && 'border-red-500/50'
       )}
+      role="listitem"
+      aria-label={getAriaLabel()}
     >
       <div className="flex items-start gap-3">
         <div className="mt-0.5">
           {isCompleting ? (
-            <Spinner size="sm" />
+            <Spinner size="sm" aria-label="Updating task status" />
           ) : (
             <Checkbox
               checked={isCompleted}
               onCheckedChange={handleComplete}
+              aria-label={isCompleted ? 'Mark task as incomplete' : 'Mark task as complete'}
             />
           )}
         </div>
@@ -85,6 +96,8 @@ export function TaskItem({
                 size="icon"
                 className="h-5 w-5 -ml-2"
                 onClick={() => setShowSubtasks(!showSubtasks)}
+                aria-label={showSubtasks ? 'Hide subtasks' : 'Show subtasks'}
+                aria-expanded={showSubtasks}
               >
                 {showSubtasks ? (
                   <ChevronDown className="h-3 w-3" />
@@ -93,13 +106,22 @@ export function TaskItem({
                 )}
               </Button>
             )}
-            
+
             <h3
               className={cn(
                 'font-medium truncate cursor-pointer',
                 isCompleted && 'line-through text-muted-foreground'
               )}
               onClick={() => onEdit?.(task)}
+              role="button"
+              tabIndex={0}
+              aria-label={`Edit task: ${task.name}`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onEdit?.(task);
+                }
+              }}
             >
               {task.name}
             </h3>
@@ -161,8 +183,10 @@ export function TaskItem({
             size="icon"
             className="h-8 w-8"
             onClick={() => onEdit?.(task)}
+            aria-label={`Edit task: ${task.name}`}
           >
             <Check className="h-4 w-4" />
+            <span className="sr-only">Edit task</span>
           </Button>
           {onDelete && (
             <Button
@@ -171,8 +195,14 @@ export function TaskItem({
               className="h-8 w-8 text-destructive hover:text-destructive"
               onClick={() => !isDeleting && onDelete(task.id)}
               disabled={isDeleting}
+              aria-label={`Delete task: ${task.name}`}
             >
-              {isDeleting ? <Spinner size="sm" /> : <Trash2 className="h-4 w-4" />}
+              {isDeleting ? (
+                <Spinner size="sm" aria-label="Deleting task" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              <span className="sr-only">Delete task</span>
             </Button>
           )}
         </div>

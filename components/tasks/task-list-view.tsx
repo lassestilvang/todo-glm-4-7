@@ -32,6 +32,7 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
   const [completingTasks, setCompletingTasks] = useState<Set<number>>(new Set());
   const [deletingTasks, setDeletingTasks] = useState<Set<number>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
 
   useEffect(() => {
     setTasks(initialTasks);
@@ -53,11 +54,15 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
   });
 
   const handleComplete = async (taskId: number, status: TaskStatus) => {
+    const task = tasks.find(t => t.id === taskId);
+    const taskName = task?.name || 'Task';
     try {
       setCompletingTasks(prev => new Set(prev).add(taskId));
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
       await completeTask(taskId, status);
+      const message = status === 'done' ? `Task "${taskName}" completed` : `Task "${taskName}" marked as todo`;
       toast.success(status === 'done' ? 'Task completed' : 'Task marked as todo');
+      setAnnouncement(message);
     } catch (error) {
       console.error('Failed to update task status:', error);
       toast.error('Failed to update task status');
@@ -77,11 +82,15 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
   };
 
   const handleDelete = async (taskId: number) => {
+    const task = tasks.find(t => t.id === taskId);
+    const taskName = task?.name || 'Task';
     try {
       setDeletingTasks(prev => new Set(prev).add(taskId));
       setTasks(prev => prev.filter(t => t.id !== taskId));
       await deleteTask(taskId);
+      const message = `Task "${taskName}" deleted`;
       toast.success('Task deleted');
+      setAnnouncement(message);
     } catch (error) {
       console.error('Failed to delete task:', error);
       toast.error('Failed to delete task');
@@ -100,10 +109,14 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
       setIsSubmitting(true);
       if (selectedTask) {
         await updateTask(selectedTask.id, { ...data, labels: [], subtasks: [] });
+        const message = `Task "${data.name}" updated successfully`;
         toast.success('Task updated successfully');
+        setAnnouncement(message);
       } else {
         await createTask({ ...data, labels: [], subtasks: [] });
+        const message = `Task "${data.name}" created successfully`;
         toast.success('Task created successfully');
+        setAnnouncement(message);
       }
       setShowTaskForm(false);
       setSelectedTask(undefined);
@@ -149,16 +162,18 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               className="pl-9"
+              aria-label="Search tasks"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <Circle className="h-4 w-4 text-muted-foreground" />
+            <Circle className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <Switch
               checked={showCompleted}
               onCheckedChange={setShowCompleted}
+              aria-label={showCompleted ? 'Hide completed tasks' : 'Show completed tasks'}
             />
-            <CheckCircle2 className="h-4 w-4" />
+            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
           </div>
         </div>
       </div>
@@ -198,6 +213,15 @@ export function TaskListView({ view, lists, labels, initialTasks, currentList }:
           </AnimatePresence>
         </div>
       </ScrollArea>
+
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announcement}
+      </div>
 
       <TaskForm
         open={showTaskForm}
