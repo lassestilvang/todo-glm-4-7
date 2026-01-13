@@ -1,59 +1,61 @@
 import { startOfDay, endOfDay, addDays } from 'date-fns';
 import { taskRepository } from './actions';
 import type { Task, ViewType, CreateTaskInput } from './types';
+import { toUTC, fromUTC } from '@/lib/utils/time';
 
 export const viewUtils = {
   getTodayTasks: async (showCompleted: boolean = false): Promise<Task[]> => {
-    const todayStart = startOfDay(new Date());
-    const todayEnd = endOfDay(new Date());
-    
+    const todayStart = toUTC(startOfDay(new Date()));
+    const todayEnd = toUTC(endOfDay(new Date()));
+
     const allTasks = await taskRepository.findByDeadlineRange(todayStart, todayEnd);
-    
+
     if (!showCompleted) {
       return allTasks.filter(t => t.status !== 'done');
     }
-    
+
     return allTasks;
   },
 
   getNext7DaysTasks: async (showCompleted: boolean = false): Promise<Task[]> => {
-    const today = startOfDay(new Date());
-    const weekEnd = endOfDay(addDays(today, 7));
-    
+    const today = toUTC(startOfDay(new Date()));
+    const weekEnd = toUTC(endOfDay(addDays(fromUTC(today), 7)));
+
     const allTasks = await taskRepository.findByDeadlineRange(today, weekEnd);
-    
+
     if (!showCompleted) {
       return allTasks.filter(t => t.status !== 'done');
     }
-    
+
     return allTasks;
   },
 
   getUpcomingTasks: async (showCompleted: boolean = false): Promise<Task[]> => {
-    const today = startOfDay(new Date());
+    const today = toUTC(startOfDay(new Date()));
     const allTasks = await taskRepository.findAll();
-    
+
     const upcoming = allTasks.filter(t => {
-      if (t.deadline && new Date(t.deadline) >= today) {
-        return true;
+      if (t.deadline) {
+        const deadlineDate = new Date(t.deadline);
+        return deadlineDate >= today;
       }
       return false;
     });
-    
+
     if (!showCompleted) {
       return upcoming.filter(t => t.status !== 'done');
     }
-    
+
     return upcoming;
   },
 
   getAllTasks: async (showCompleted: boolean = false): Promise<Task[]> => {
     const allTasks = await taskRepository.findAll();
-    
+
     if (!showCompleted) {
       return allTasks.filter(t => t.status !== 'done');
     }
-    
+
     return allTasks;
   },
 

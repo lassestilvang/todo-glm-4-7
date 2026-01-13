@@ -3,7 +3,7 @@
 import { taskRepository } from '@/features/tasks/actions';
 import { listRepository } from '@/features/lists/actions';
 import type { TaskFormData, TaskStatus, CreateTaskInput, UpdateTaskInput } from '@/features/tasks/types';
-import { timeToMinutes } from '@/lib/validators/schema';
+import { timeToMinutes, parseDateInput } from '@/lib/utils/time';
 
 export async function createTask(data: TaskFormData) {
   const taskInput: CreateTaskInput = {
@@ -16,25 +16,13 @@ export async function createTask(data: TaskFormData) {
     estimated_time: data.estimated_time ? timeToMinutes(data.estimated_time) : undefined,
     actual_time: data.actual_time ? timeToMinutes(data.actual_time) : undefined,
   };
-  
-  if (data.deadline) {
-    taskInput.deadline = new Date(data.deadline);
-  } else if (data.deadline === '') {
-    taskInput.deadline = null;
-  }
-  
-  if (data.reminder_time) {
-    taskInput.reminder_time = new Date(data.reminder_time);
-  } else if (data.reminder_time === '') {
-    taskInput.reminder_time = null;
-  }
-  
-  if (data.recurring_end_date) {
-    taskInput.recurring_end_date = new Date(data.recurring_end_date);
-  } else if (data.recurring_end_date === '') {
-    taskInput.recurring_end_date = null;
-  }
-  
+
+  taskInput.deadline = parseDateInput(data.deadline || '');
+
+  taskInput.reminder_time = parseDateInput(data.reminder_time || '');
+
+  taskInput.recurring_end_date = parseDateInput(data.recurring_end_date || '');
+
   return await taskRepository.create(taskInput);
 }
 
@@ -49,21 +37,9 @@ export async function updateTask(id: number, data: Partial<TaskFormData>) {
   if (data.actual_time) {
     update.actual_time = timeToMinutes(data.actual_time);
   }
-  if (data.deadline) {
-    update.deadline = new Date(data.deadline);
-  } else if (data.deadline === '') {
-    update.deadline = null;
-  }
-  if (data.reminder_time) {
-    update.reminder_time = new Date(data.reminder_time);
-  } else if (data.reminder_time === '') {
-    update.reminder_time = null;
-  }
-  if (data.recurring_end_date) {
-    update.recurring_end_date = new Date(data.recurring_end_date);
-  } else if (data.recurring_end_date === '') {
-    update.recurring_end_date = null;
-  }
+  update.deadline = parseDateInput(data.deadline || '');
+  update.reminder_time = parseDateInput(data.reminder_time || '');
+  update.recurring_end_date = parseDateInput(data.recurring_end_date || '');
   if (data.priority !== undefined) update.priority = data.priority;
   if (data.labels !== undefined) update.labels = data.labels;
   if (data.recurring_pattern !== undefined) update.recurring_pattern = data.recurring_pattern;

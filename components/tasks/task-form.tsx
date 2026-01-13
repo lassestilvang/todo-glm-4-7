@@ -32,6 +32,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { type Task, List } from '@/features/tasks/types';
+import { formatDateInput, minutesToTime } from '@/lib/utils/time';
 
 const taskFormSchema = z.object({
   name: z.string().min(1, 'Task name is required'),
@@ -80,13 +81,13 @@ export function TaskForm({ open, onClose, onSubmit, task, lists, isSubmitting = 
         name: task.name || '',
         description: task.description || '',
         list_id: task.list_id || lists[0]?.id || 0,
-        deadline: task.deadline ? task.deadline.slice(0, 16) : '',
-        reminder_time: task.reminder_time ? task.reminder_time.slice(0, 16) : '',
-        estimated_time: task.estimated_time ? String(Math.floor(task.estimated_time / 60)).padStart(2, '0') + ':' + String(task.estimated_time % 60).padStart(2, '0') : '',
-        actual_time: task.actual_time ? String(Math.floor(task.actual_time / 60)).padStart(2, '0') + ':' + String(task.actual_time % 60).padStart(2, '0') : '',
+        deadline: task.deadline ? formatDateInput(task.deadline) : '',
+        reminder_time: task.reminder_time ? formatDateInput(task.reminder_time) : '',
+        estimated_time: task.estimated_time ? minutesToTime(task.estimated_time) : '',
+        actual_time: task.actual_time ? minutesToTime(task.actual_time) : '',
         priority: task.priority || 'none',
         recurring_pattern: task.recurring_pattern || 'none',
-        recurring_end_date: task.recurring_end_date ? task.recurring_end_date.slice(0, 16) : '',
+        recurring_end_date: task.recurring_end_date ? formatDateInput(task.recurring_end_date) : '',
       });
     } else {
       form.reset({

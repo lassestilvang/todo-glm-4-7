@@ -2,9 +2,9 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { format } from 'date-fns';
 import { Check, Clock, ChevronDown, ChevronRight, AlertCircle, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDateDisplay, isOverdue } from '@/lib/utils/time';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,7 +44,7 @@ export function TaskItem({
   const taskSubtasks = 'subtasks' in task ? task.subtasks as Task[] : [];
   const taskLabels = 'labels' in task ? task.labels as Label[] : [];
   const hasSubtasks = taskSubtasks && taskSubtasks.length > 0;
-  const isOverdue = task.deadline && new Date(task.deadline) < new Date() && task.status !== 'done';
+  const taskIsOverdue = task.deadline && isOverdue(task.deadline, task.status);
 
   const handleComplete = (checked: boolean) => {
     if (!isCompleting) {
@@ -62,7 +62,7 @@ export function TaskItem({
       className={cn(
         'group rounded-lg border bg-card p-4 transition-colors hover:bg-accent/50',
         isCompleted && 'opacity-60',
-        isOverdue && 'border-red-500/50'
+        taskIsOverdue && 'border-red-500/50'
       )}
     >
       <div className="flex items-start gap-3">
@@ -103,8 +103,8 @@ export function TaskItem({
             >
               {task.name}
             </h3>
-            
-            {isOverdue && (
+
+            {taskIsOverdue && (
               <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
             )}
           </div>
@@ -119,7 +119,7 @@ export function TaskItem({
             {task.deadline && (
               <Badge variant="outline" className="text-xs">
                 <Clock className="mr-1 h-3 w-3" />
-                {format(new Date(task.deadline), 'MMM d, h:mm a')}
+                {formatDateDisplay(task.deadline)}
               </Badge>
             )}
 
