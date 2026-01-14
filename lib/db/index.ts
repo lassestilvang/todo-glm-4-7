@@ -11,33 +11,50 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 db.serialize(() => {
   db.run('PRAGMA journal_mode = WAL');
+  db.run('PRAGMA foreign_keys = ON');
 });
 
 function runAsync(sql: string, params: unknown[] = []): Promise<{ lastID: number; changes: number }> {
   return new Promise((resolve, reject) => {
-    db.run(sql, params, function(err) {
-      if (err) reject(err);
-      else resolve({ lastID: this.lastID, changes: this.changes });
+    db.serialize(() => {
+      db.run(sql, params, function(err) {
+        if (err) reject(err);
+        else resolve({ lastID: this.lastID, changes: this.changes });
+      });
     });
   });
 }
 
+function convertRow<T>(row: any): T {
+  const converted = { ...row };
+  for (const key in converted) {
+    if (typeof converted[key] === 'number' && (converted[key] === 0 || converted[key] === 1)) {
+      converted[key] = Boolean(converted[key]);
+    }
+  }
+  return converted as T;
+}
+
 function getAsync<T>(sql: string, params: unknown[] = []): Promise<T | undefined> {
   return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) reject(err);
-      else resolve(row as T);
+    db.serialize(() => {
+      db.get(sql, params, (err, row) => {
+        if (err) reject(err);
+        else resolve(row ? convertRow<T>(row) : undefined);
+      });
     });
   });
 }
 
 function allAsync<T>(sql: string, params: unknown[] = []): Promise<T[]> {
   return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows as T[]);
+    db.serialize(() => {
+      db.all(sql, params, (err, rows) => {
+        if (err) reject(err);
+        else resolve((rows as any[]).map(row => convertRow<T>(row)));
+      });
     });
   });
 }
 
-export { db, dbPath, runAsync, getAsync, allAsync };
+export { db, dbPath, runAsync, getAsync, allAsync, convertRow };

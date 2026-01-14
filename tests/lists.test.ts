@@ -1,16 +1,16 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { db } from '@/lib/db';
+import { runAsync, allAsync } from '@/lib/db';
 import { listRepository } from '@/features/lists/actions';
 
 describe('List Repository', () => {
   beforeEach(async () => {
-    await db.run('DELETE FROM lists');
-    await db.run('DELETE FROM tasks');
+    await runAsync('DELETE FROM lists');
+    await runAsync('DELETE FROM tasks');
   });
 
   afterEach(async () => {
-    await db.run('DELETE FROM lists');
-    await db.run('DELETE FROM tasks');
+    await runAsync('DELETE FROM lists');
+    await runAsync('DELETE FROM tasks');
   });
 
   describe('create', () => {
@@ -50,7 +50,7 @@ describe('List Repository', () => {
 
   describe('findInbox', () => {
     it('should find the inbox list', async () => {
-      await db.run("INSERT INTO lists (name, emoji, color, is_inbox) VALUES ('Inbox', '📥', '#3b82f6', 1)");
+      await runAsync("INSERT INTO lists (name, emoji, color, is_inbox) VALUES ('Inbox', '📥', '#3b82f6', 1)");
       const inbox = await listRepository.findInbox();
 
       expect(inbox).toBeDefined();
@@ -67,7 +67,7 @@ describe('List Repository', () => {
     it('should return all lists ordered by inbox first', async () => {
       const list1 = await listRepository.create('Work', '💼', '#3b82f6');
       const list2 = await listRepository.create('Personal', '🏠', '#10b981');
-      await db.run("INSERT INTO lists (name, emoji, color, is_inbox) VALUES ('Inbox', '📥', '#3b82f6', 1)");
+      await runAsync("INSERT INTO lists (name, emoji, color, is_inbox) VALUES ('Inbox', '📥', '#3b82f6', 1)");
 
       const lists = await listRepository.findAll();
 
@@ -90,9 +90,9 @@ describe('List Repository', () => {
 
     it('should update updated_at timestamp', async () => {
       const list = await listRepository.create('Work', '💼', '#3b82f6');
-      
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+
+      await new Promise(resolve => setTimeout(resolve, 1100));
+
       const updated = await listRepository.update(list.id, 'Updated Work', '🔧', '#ef4444');
 
       expect(new Date(updated.updated_at).getTime()).toBeGreaterThan(new Date(list.updated_at).getTime());
@@ -110,21 +110,19 @@ describe('List Repository', () => {
     });
 
     it('should throw error when trying to delete inbox', async () => {
-      await db.run("INSERT INTO lists (name, emoji, color, is_inbox) VALUES ('Inbox', '📥', '#3b82f6', 1)");
+      await runAsync("INSERT INTO lists (name, emoji, color, is_inbox) VALUES ('Inbox', '📥', '#3b82f6', 1)");
       const inbox = await listRepository.findInbox();
 
-      expect(() => {
-        listRepository.delete(inbox!.id);
-      }).toThrow('Cannot delete Inbox list');
+      await expect(listRepository.delete(inbox!.id)).rejects.toThrow('Cannot delete Inbox list');
     });
 
     it('should cascade delete tasks when list is deleted', async () => {
       const list = await listRepository.create('Work', '💼', '#3b82f6');
-      await db.run('INSERT INTO tasks (name, list_id) VALUES (?, ?)', ['Test Task', list.id]);
+      await runAsync('INSERT INTO tasks (name, list_id) VALUES (?, ?)', ['Test Task', list.id]);
 
       await listRepository.delete(list.id);
 
-      const tasks = await db.all('SELECT * FROM tasks WHERE list_id = ?', [list.id]);
+      const tasks = await allAsync('SELECT * FROM tasks WHERE list_id = ?', [list.id]);
       expect(tasks.length).toBe(0);
     });
   });

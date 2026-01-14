@@ -1,22 +1,22 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { db } from '@/lib/db';
+import { runAsync, allAsync } from '@/lib/db';
 import { labelRepository } from '@/features/labels/actions';
 import { listRepository } from '@/features/lists/actions';
 import { taskRepository } from '@/features/tasks/actions';
 
 describe('Label Repository', () => {
   beforeEach(async () => {
-    await db.run('DELETE FROM labels');
-    await db.run('DELETE FROM lists');
-    await db.run('DELETE FROM tasks');
-    await db.run('DELETE FROM task_labels');
+    await runAsync('DELETE FROM labels');
+    await runAsync('DELETE FROM lists');
+    await runAsync('DELETE FROM tasks');
+    await runAsync('DELETE FROM task_labels');
   });
 
   afterEach(async () => {
-    await db.run('DELETE FROM labels');
-    await db.run('DELETE FROM lists');
-    await db.run('DELETE FROM tasks');
-    await db.run('DELETE FROM task_labels');
+    await runAsync('DELETE FROM labels');
+    await runAsync('DELETE FROM lists');
+    await runAsync('DELETE FROM tasks');
+    await runAsync('DELETE FROM task_labels');
   });
 
   describe('create', () => {
@@ -83,9 +83,9 @@ describe('Label Repository', () => {
 
     it('should update updated_at timestamp', async () => {
       const label = await labelRepository.create('Urgent', '🔥', '#ef4444');
-      
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+
+      await new Promise(resolve => setTimeout(resolve, 1100));
+
       const updated = await labelRepository.update(label.id, 'Updated', '✅', '#10b981');
 
       expect(new Date(updated.updated_at).getTime()).toBeGreaterThan(new Date(label.updated_at).getTime());
@@ -114,7 +114,7 @@ describe('Label Repository', () => {
 
       await labelRepository.delete(label.id);
 
-      const taskLabels = await db.all('SELECT * FROM task_labels WHERE label_id = ?', [label.id]);
+      const taskLabels = await allAsync('SELECT * FROM task_labels WHERE label_id = ?', [label.id]);
       expect(taskLabels.length).toBe(0);
     });
   });
