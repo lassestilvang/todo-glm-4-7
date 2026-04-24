@@ -25,8 +25,8 @@ function runAsync(sql: string, params: unknown[] = []): Promise<{ lastID: number
   });
 }
 
-function convertRow<T>(row: any): T {
-  const converted = { ...row };
+function convertRow<T>(row: Record<string, unknown>): T {
+  const converted: Record<string, unknown> = { ...row };
   for (const key in converted) {
     if (typeof converted[key] === 'number' && (converted[key] === 0 || converted[key] === 1)) {
       converted[key] = Boolean(converted[key]);
@@ -51,7 +51,7 @@ function allAsync<T>(sql: string, params: unknown[] = []): Promise<T[]> {
     db.serialize(() => {
       db.all(sql, params, (err, rows) => {
         if (err) reject(err);
-        else resolve((rows as any[]).map(row => convertRow<T>(row)));
+        else resolve((rows as Record<string, unknown>[]).map(row => convertRow<T>(row)));
       });
     });
   });
