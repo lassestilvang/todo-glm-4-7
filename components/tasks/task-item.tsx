@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Check, Clock, ChevronDown, ChevronRight, AlertCircle, Trash2 } from 'lucide-react';
+import { Check, Clock, ChevronDown, ChevronRight, AlertCircle, Trash2, Moon, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDateDisplay, isOverdue } from '@/lib/utils/time';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { SubtaskItem } from './subtask-item';
 import { Timer } from '@/components/timer/Timer';
+import { PomodoroTimer } from '@/components/focus/PomodoroTimer';
 import type { Task, TaskStatus, Priority, Label } from '@/features/tasks/types';
 
 interface TaskItemProps {
@@ -138,14 +139,20 @@ export function TaskItem({
              </p>
            )}
            
-           {/* Timer controls */}
-           <div className="mt-2 flex items-center gap-2">
-             <span className="text-xs text-muted-foreground">Time:</span>
-             <Timer 
-               taskId={task.id} 
-               initialActualTime={task.actual_time || 0} 
-             />
-           </div>
+            {/* Timer controls */}
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Time:</span>
+              <Timer 
+                taskId={task.id} 
+                initialActualTime={task.actual_time || 0} 
+              />
+            </div>
+            
+            {/* Focus mode controls */}
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Focus:</span>
+              <PomodoroTimer taskId={task.id} />
+            </div>
 
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {task.deadline && (
