@@ -1,12 +1,11 @@
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { Calendar } from '@/components/ui/calendar';
-import { Button } from '@/components/ui/button';
 import { taskRepository } from '@/features/tasks/actions';
 import { listRepository } from '@/features/lists/actions';
 import { labelRepository } from '@/features/labels/actions';
 import { format, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,56 +20,66 @@ interface DayTask {
   }>;
 }
 
-export default async function CalendarPage() {
-  const [lists, labels] = await Promise.all([
-    listRepository.findAll(),
-    labelRepository.findUsedLabels()
-  ]);
-
+export default function CalendarPage() {
+  const [lists, labels] = useState<Array<any>>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [tasksByDate, setTasksByDate] = useState<Record<string, DayTask>>({});
 
+  // Load lists and labels
+  useEffect(() => {
+    const loadInitialData = async () => {
+      const [listsData, labelsData] = await Promise.all([
+        listRepository.findAll(),
+        labelRepository.findUsedLabels()
+      ]);
+      setLists(listsData);
+    };
+
+    loadInitialData();
+  }, []);
+
   // Load tasks for current month
-  const loadTasksForMonth = async (date: Date) => {
-    const monthStart = startOfMonth(date);
-    const monthEnd = endOfMonth(date);
-    
-    const allTasks = await taskRepository.findAll();
-    const monthTasks = allTasks.filter(task => {
-      if (!task.deadline) return false;
-      const deadlineDate = new Date(task.deadline);
-      return deadlineDate >= monthStart && deadlineDate <= monthEnd;
-    });
-
-    // Group tasks by date
-    const groupedTasks: Record<string, DayTask> = {};
-    monthTasks.forEach(task => {
-      if (!task.deadline) return;
-      const date = new Date(task.deadline);
-      const dateString = format(date, 'yyyy-MM-dd');
+  useEffect(() => {
+    const loadTasksForMonth = async () => {
+      const monthStart = startOfMonth(currentDate);
+      const monthEnd = endOfMonth(currentDate);
       
-      if (!groupedTasks[dateString]) {
-        groupedTasks[dateString] = {
-          date: dateString,
-          tasks: []
-        };
-      }
-
-      groupedTasks[dateString].tasks.push({
-        id: task.id,
-        name: task.name,
-        status: task.status,
-        priority: task.priority,
-        color: '#3b82f6' // Default color
+      const allTasks = await taskRepository.findAll();
+      const monthTasks = allTasks.filter(task => {
+        if (!task.deadline) return false;
+        const deadlineDate = new Date(task.deadline);
+        return deadlineDate >= monthStart && deadlineDate <= monthEnd;
       });
-    });
 
-    setTasksByDate(groupedTasks);
-  };
+      // Group tasks by date
+      const groupedTasks: Record<string, DayTask> = {};
+      monthTasks.forEach(task => {
+        if (!task.deadline) return;
+        const date = new Date(task.deadline);
+        const dateString = format(date, 'yyyy-MM-dd');
+        
+        if (!groupedTasks[dateString]) {
+          groupedTasks[dateString] = {
+            date: dateString,
+            tasks: []
+          };
+        }
 
-  // Load initial tasks
-  loadTasksForMonth(currentDate);
+        groupedTasks[dateString].tasks.push({
+          id: task.id,
+          name: task.name,
+          status: task.status,
+          priority: task.priority,
+          color: '#3b82f6' // Default color
+        });
+      });
+
+      setTasksByDate(groupedTasks);
+    };
+
+    loadTasksForMonth();
+  }, [currentDate]);
 
   return (
     <div className="flex h-screen">
