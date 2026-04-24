@@ -14,7 +14,16 @@ db.serialize(() => {
   db.run('PRAGMA foreign_keys = ON');
 });
 
-function runAsync(sql: string, params: unknown[] = []): Promise<{ lastID: number; changes: number }> {
+export interface RunAsyncResult {
+  lastID: number;
+  changes: number;
+}
+
+interface DbRow {
+  [key: string]: unknown;
+}
+
+function runAsync(sql: string, params: unknown[] = []): Promise<RunAsyncResult> {
   return new Promise((resolve, reject) => {
     db.serialize(() => {
       db.run(sql, params, function(err) {
@@ -25,8 +34,8 @@ function runAsync(sql: string, params: unknown[] = []): Promise<{ lastID: number
   });
 }
 
-function convertRow<T>(row: Record<string, unknown>): T {
-  const converted: Record<string, unknown> = { ...row };
+function convertRow<T>(row: DbRow): T {
+  const converted: DbRow = { ...row };
   for (const key in converted) {
     if (typeof converted[key] === 'number' && (converted[key] === 0 || converted[key] === 1)) {
       converted[key] = Boolean(converted[key]);
