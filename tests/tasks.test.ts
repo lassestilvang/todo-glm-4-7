@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { runAsync, allAsync } from '@/lib/db';
+import { runAsync, allAsync, type RunAsyncResult } from '@/lib/db';
 import { taskRepository } from '@/features/tasks/actions';
 import { listRepository } from '@/features/lists/actions';
 import type { CreateTaskInput } from '@/features/tasks/types';
+
+type InsertResult = RunAsyncResult;
 
 describe('Task Repository', () => {
   beforeEach(async () => {
@@ -46,8 +48,8 @@ describe('Task Repository', () => {
 
     it('should create a task with labels', async () => {
       const list = await listRepository.create('Test List', '📋', '#3b82f6');
-      const labelResult = await runAsync('INSERT INTO labels (name, emoji, color) VALUES (?, ?, ?)', ['Test Label', '🏷️', '#8b5cf6']);
-      const labelId = (labelResult as any).lastID;
+      const labelResult = await runAsync('INSERT INTO labels (name, emoji, color) VALUES (?, ?, ?)', ['Test Label', '🏷️', '#8b5cf6']) as InsertResult;
+      const labelId = labelResult.lastID;
 
       const taskData: CreateTaskInput = {
         name: 'Test Task',
@@ -56,7 +58,7 @@ describe('Task Repository', () => {
       };
 
       const task = await taskRepository.create(taskData);
-      const taskLabels = await allAsync<any>('SELECT * FROM task_labels WHERE task_id = ?', [task.id]);
+      const taskLabels = await allAsync<{ task_id: number; label_id: number }>('SELECT * FROM task_labels WHERE task_id = ?', [task.id]);
 
       expect(taskLabels.length).toBe(1);
       expect(taskLabels[0].label_id).toBe(labelId);
@@ -116,10 +118,10 @@ describe('Task Repository', () => {
         name: 'Updated Task',
       });
 
-      const changeLogs = await allAsync<any>('SELECT * FROM change_logs WHERE task_id = ?', [task.id]);
+      const changeLogs = await allAsync<{ task_id: number; field_name: string; old_value: string | null; new_value: string | null }>('SELECT * FROM change_logs WHERE task_id = ?', [task.id]);
       expect(changeLogs.length).toBeGreaterThan(0);
 
-      const nameChange = changeLogs.find((cl: any) => cl.field_name === 'name');
+      const nameChange = changeLogs.find((cl) => cl.field_name === 'name');
       expect(nameChange).toBeDefined();
       expect(nameChange!.old_value).toBe('Test Task');
       expect(nameChange!.new_value).toBe('Updated Task');
@@ -160,8 +162,8 @@ describe('Task Repository', () => {
   describe('findWithDetails', () => {
     it('should return task with labels and attachments', async () => {
       const list = await listRepository.create('Test List', '📋', '#3b82f6');
-      const labelResult = await runAsync('INSERT INTO labels (name, emoji, color) VALUES (?, ?, ?)', ['Test Label', '🏷️', '#8b5cf6']);
-      const labelId = (labelResult as any).lastID;
+      const labelResult = await runAsync('INSERT INTO labels (name, emoji, color) VALUES (?, ?, ?)', ['Test Label', '🏷️', '#8b5cf6']) as InsertResult;
+      const labelId = labelResult.lastID;
 
       const task = await taskRepository.create({
         name: 'Test Task',
@@ -181,10 +183,10 @@ describe('Task Repository', () => {
   describe('labels', () => {
     it('should add labels to a task', async () => {
       const list = await listRepository.create('Test List', '📋', '#3b82f6');
-      const label1Result = await runAsync('INSERT INTO labels (name, emoji, color) VALUES (?, ?, ?)', ['Label 1', '🏷️', '#8b5cf6']);
-      const label2Result = await runAsync('INSERT INTO labels (name, emoji, color) VALUES (?, ?, ?)', ['Label 2', '🏷️', '#8b5cf6']);
-      const label1Id = (label1Result as any).lastID;
-      const label2Id = (label2Result as any).lastID;
+      const label1Result = await runAsync('INSERT INTO labels (name, emoji, color) VALUES (?, ?, ?)', ['Label 1', '🏷️', '#8b5cf6']) as InsertResult;
+      const label2Result = await runAsync('INSERT INTO labels (name, emoji, color) VALUES (?, ?, ?)', ['Label 2', '🏷️', '#8b5cf6']) as InsertResult;
+      const label1Id = label1Result.lastID;
+      const label2Id = label2Result.lastID;
 
       const task = await taskRepository.create({
         name: 'Test Task',
@@ -193,14 +195,14 @@ describe('Task Repository', () => {
 
       await taskRepository.addLabels(task.id, [label1Id, label2Id]);
 
-      const taskLabels = await allAsync<any>('SELECT * FROM task_labels WHERE task_id = ?', [task.id]);
+      const taskLabels = await allAsync<{ task_id: number; label_id: number }>('SELECT * FROM task_labels WHERE task_id = ?', [task.id]);
       expect(taskLabels.length).toBe(2);
     });
 
     it('should remove a label from a task', async () => {
       const list = await listRepository.create('Test List', '📋', '#3b82f6');
       const labelResult = await runAsync('INSERT INTO labels (name, emoji, color) VALUES (?, ?, ?)', ['Test Label', '🏷️', '#8b5cf6']);
-      const labelId = (labelResult as any).lastID;
+      const labelId = labelResult.lastID;
 
       const task = await taskRepository.create({
         name: 'Test Task',
@@ -210,7 +212,7 @@ describe('Task Repository', () => {
 
       await taskRepository.removeLabel(task.id, labelId);
 
-      const taskLabels = await allAsync<any>('SELECT * FROM task_labels WHERE task_id = ?', [task.id]);
+      const taskLabels = await allAsync<{ task_id: number; label_id: number }>('SELECT * FROM task_labels WHERE task_id = ?', [task.id]);
       expect(taskLabels.length).toBe(0);
     });
   });
