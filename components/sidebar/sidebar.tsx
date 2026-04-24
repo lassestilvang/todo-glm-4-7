@@ -140,12 +140,18 @@ export function Sidebar({ lists = [], labels = [], overdueCount = 0 }: SidebarPr
         </nav>
       </ScrollArea>
 
-      <div className="border-t p-4">
-        <Button variant="ghost" className="w-full justify-start" size="sm">
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
-        </Button>
-      </div>
+       <div className="border-t p-4">
+         <Button variant="ghost" className="w-full justify-start" size="sm" onClick={() => {
+           document.documentElement.classList.toggle('dark');
+         }}>
+           <Moon className="mr-2 h-4 w-4" />
+           Toggle Theme
+         </Button>
+         <Button variant="ghost" className="w-full justify-start" size="sm">
+           <Settings className="mr-2 h-4 w-4" />
+           Settings
+         </Button>
+       </div>
     </div>
   );
 }
