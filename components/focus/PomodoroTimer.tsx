@@ -1,25 +1,25 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { PlayPause, SkipBack, SkipForward, Circle, Moon, Sun, Pause } from 'lucide-react';
+import { PlayPause, SkipBack, SkipForward, Circle, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface PomodoroTimerProps {
-  taskId: number;
+  _taskId: number;
   onSessionComplete?: (sessionType: 'work' | 'break') => void;
 }
 
-export function PomodoroTimer({ taskId, onSessionComplete }: PomodoroTimerProps) {
+// Work and break durations in minutes
+const WORK_DURATION = 25 * 60; // 25 minutes
+const SHORT_BREAK_DURATION = 5 * 60; // 5 minutes
+const LONG_BREAK_DURATION = 15 * 60; // 15 minutes
+
+export function PomodoroTimer({ onSessionComplete }: PomodoroTimerProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [isWorkSession, setIsWorkSession] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(WORK_DURATION); // 25 minutes in seconds
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Work and break durations in minutes
-  const WORK_DURATION = 25 * 60; // 25 minutes
-  const SHORT_BREAK_DURATION = 5 * 60; // 5 minutes
-  const LONG_BREAK_DURATION = 15 * 60; // 15 minutes
   const [pomodorosCompleted, setPomodorosCompleted] = useState(0);
 
   useEffect(() => {
@@ -203,8 +203,4 @@ export function PomodoroTimer({ taskId, onSessionComplete }: PomodoroTimerProps)
       </Button>
     </div>
 );
-}
-
-export function PomodoroTimer({ taskId, onSessionComplete }: PomodoroTimerProps) {
-// ... rest of the component
 }
