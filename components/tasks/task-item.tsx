@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { SubtaskItem } from './subtask-item';
+import { Timer } from '@/components/timer/Timer';
 import type { Task, TaskStatus, Priority, Label } from '@/features/tasks/types';
 
 interface TaskItemProps {
@@ -131,11 +132,20 @@ export function TaskItem({
             )}
           </div>
 
-          {task.description && (
-            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-              {task.description}
-            </p>
-          )}
+           {task.description && (
+             <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+               {task.description}
+             </p>
+           )}
+           
+           {/* Timer controls */}
+           <div className="mt-2 flex items-center gap-2">
+             <span className="text-xs text-muted-foreground">Time:</span>
+             <Timer 
+               taskId={task.id} 
+               initialActualTime={task.actual_time || 0} 
+             />
+           </div>
 
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {task.deadline && (
