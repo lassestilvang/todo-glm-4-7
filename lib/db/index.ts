@@ -49,7 +49,7 @@ function getAsync<T>(sql: string, params: unknown[] = []): Promise<T | undefined
     db.serialize(() => {
       db.get(sql, params, (err, row) => {
         if (err) reject(err);
-        else resolve(row ? convertRow<T>(row) : undefined);
+        else resolve(row ? convertRow<T>(row as DbRow) : undefined);
       });
     });
   });
@@ -60,7 +60,7 @@ function allAsync<T>(sql: string, params: unknown[] = []): Promise<T[]> {
     db.serialize(() => {
       db.all(sql, params, (err, rows) => {
         if (err) reject(err);
-        else resolve((rows as Record<string, unknown>[]).map(row => convertRow<T>(row)));
+        else resolve((rows as unknown[]).map((row) => convertRow<T>(row as DbRow)));
       });
     });
   });
