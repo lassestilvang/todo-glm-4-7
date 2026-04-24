@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface PomodoroTimerProps {
-  _taskId: number;
+  taskId: number;
   onSessionComplete?: (sessionType: 'work' | 'break') => void;
 }
 
@@ -15,7 +15,7 @@ const WORK_DURATION = 25 * 60; // 25 minutes
 const SHORT_BREAK_DURATION = 5 * 60; // 5 minutes
 const LONG_BREAK_DURATION = 15 * 60; // 15 minutes
 
-export function PomodoroTimer({ onSessionComplete }: PomodoroTimerProps) {
+export function PomodoroTimer({ taskId, onSessionComplete }: PomodoroTimerProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [isWorkSession, setIsWorkSession] = useState(true);
   const [timeLeft, setTimeLeft] = useState(WORK_DURATION); // 25 minutes in seconds
