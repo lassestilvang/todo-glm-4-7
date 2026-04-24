@@ -27,6 +27,7 @@ export function Sidebar({ lists = [], labels = [], overdueCount = 0 }: SidebarPr
     { name: 'Next 7 Days', href: '/next-7-days', icon: CalendarDays },
     { name: 'Upcoming', href: '/upcoming', icon: Clock },
     { name: 'All Tasks', href: '/all', icon: ListTodo },
+    { name: 'Calendar', href: '/calendar', icon: CalendarDays }, // Using CalendarDays for now, could use a calendar icon
   ];
 
   return (
