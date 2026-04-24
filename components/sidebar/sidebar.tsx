@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { lazy, Suspense } from 'react';
 import { cn } from '@/lib/utils';
-import { CalendarDays, Clock, ListTodo, Home, Plus, Settings } from 'lucide-react';
+import { CalendarDays, Clock, ListTodo, Home, Plus, Settings, Moon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
